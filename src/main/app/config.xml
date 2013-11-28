@@ -6,4 +6,13 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
 	<!-- This is the main configuration files, you should place here all the Connectors configuration an declarations -->
 
     <context:property-placeholder location="common.properties, mule.${mule.env}.properties"/>
+    
+    <sfdc:config name="SalesforceA" username="${sfdc.a.username}" password="${sfdc.a.password}" securityToken="${sfdc.a.securityToken}" url="${sfdc.a.url}" doc:name="Salesforce">
+        <sfdc:connection-pooling-profile initialisationPolicy="INITIALISE_ONE" exhaustedAction="WHEN_EXHAUSTED_GROW"/>
+    </sfdc:config>
+
+    <sfdc:config name="SalesforceB" username="${sfdc.b.username}" password="${sfdc.b.password}" securityToken="${sfdc.b.securityToken}" url="${sfdc.b.url}" doc:name="Salesforce">
+        <sfdc:connection-pooling-profile initialisationPolicy="INITIALISE_ONE" exhaustedAction="WHEN_EXHAUSTED_GROW"/>
+    </sfdc:config>
+    
 </mule>

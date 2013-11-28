@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+<mule xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd">
     <flow name="mainFlow" doc:name="mainFlow" doc:description="Here you should place the main business logic.">
+        <flow-ref name="gatherDataFlow" doc:name="gatherDataFlow"/>
         <exception-strategy ref="defaultChoiceExceptionStrategy" doc:name="Reference Exception Strategy"/>
     </flow>
+    <sub-flow name="gatherDataFlow" doc:name="gatherDataFlow">
+    <enricher source="#[payload]" target="#[flowVars['contactsFromOrgA']]" doc:name="Store result in FlowVar 'usersFromOrgA'">
+        <sfdc:query-all config-ref="SalesforceA" query="SELECT FirstName, LastName, Email, Id  FROM Contact" doc:name="Query all users from company A"/>
+    </enricher>
+    <enricher source="#[payload]" target="#[flowVars['contactsFromOrgB']]" doc:name="Store result in FlowVar 'usersFromOrgB'">
+        <sfdc:query-all config-ref="SalesforceB" query="SELECT FirstName, LastName, Email, Id  FROM Contact" doc:name="Query all users from company B"/>
+    </enricher>
+</sub-flow>
 </mule>
