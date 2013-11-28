@@ -5,7 +5,7 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
 	
 	<!-- 	In this file you should declare all your Exception Strategies and Choise Exception Strategies so as to have a centrilized controll over the error handling of the application -->
     
-    <choice-exception-strategy name="defaultChoiseExceptionStrategy">
+    <choice-exception-strategy name="defaultChoiceExceptionStrategy">
         <catch-exception-strategy when="#[exception.causedBy(java.lang.Exception)]" doc:name="Catch Exception Strategy">
             <logger level="INFO" doc:name="Logger"/>
         </catch-exception-strategy>
