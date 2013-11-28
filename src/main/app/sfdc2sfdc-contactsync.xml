@@ -6,6 +6,8 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd">
     <flow name="mainFlow" doc:name="mainFlow" doc:description="Here you should place the main business logic.">
         <flow-ref name="gatherDataFlow" doc:name="gatherDataFlow"/>
+        <logger message="Contacts from Org A: #[flowVars['contactsFromOrgA']]" level="INFO" doc:name="Logger"/>
+        <logger message="Contacts from Org B: #[flowVars['contactsFromOrgB']]" level="INFO" doc:name="Logger"/>
         <exception-strategy ref="defaultChoiceExceptionStrategy" doc:name="Reference Exception Strategy"/>
     </flow>
     <sub-flow name="gatherDataFlow" doc:name="gatherDataFlow">
