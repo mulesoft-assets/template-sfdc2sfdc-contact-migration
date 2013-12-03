@@ -6,26 +6,31 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd">
     <flow name="mainFlow" doc:name="mainFlow" doc:description="Here you should place the main business logic.">
         <flow-ref name="gatherDataFlow" doc:name="gatherDataFlow"/>
-        <flow-ref name="insertDataFlow" doc:name="Flow Reference"/>
-        <logger message="Amount of contacts #[flowVars['contactCount']]" level="INFO" doc:name="Logger"/>
-        <set-payload value="Amount of contacts #[flowVars['contactCount']]" doc:name="Set Payload"/>
+        <flow-ref name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow"/>
+        <logger message="Amount of contacts #[flowVars['contactCount']] - Contacts Filtered #[flowVars['filteredContactsCount']]&#160;" level="INFO" doc:name="Logger"/>
+        <set-payload value="Amount of contacts #[flowVars['contactCount']] - Amount of contacts Filtered #[flowVars['filteredContactsCount']]" doc:name="Set Payload"/>
         <exception-strategy ref="defaultChoiceExceptionStrategy" doc:name="Reference Exception Strategy"/>
     </flow>
     <sub-flow name="gatherDataFlow" doc:name="gatherDataFlow">
         <logger message="Gathering Contact's Data..." level="INFO" doc:name="Logger"/>
-		<sfdc:query config-ref="SalesforceA" query="dsql:SELECT Description, Email, FirstName, LastName, MailingCity, MailingCountry, MobilePhone, Phone, Title, Department FROM Contact ORDER BY Email ASC LIMIT 2" doc:name="Salesforce" fetchSize="1000"/>
+		<sfdc:query config-ref="SalesforceA" query="dsql:SELECT Description, Email, FirstName, LastName, MailingCity, MailingCountry, MobilePhone, Phone, Title, Department FROM Contact ORDER BY Email ASC LIMIT 100" doc:name="Salesforce" fetchSize="1000"/>
         <set-variable variableName="contactCount" value="#[payload.size()]" doc:name="contactCount"/>
 	</sub-flow>
-    <sub-flow name="insertDataFlow" doc:name="insertDataFlow">
-        <logger message="Creating Contacts&#8230;" level="INFO" doc:name="Logger"/>
-        <set-variable variableName="contactList" value="#[new java.util.ArrayList()]" doc:name="contactList"/>
+    <sub-flow name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow">
+        <logger message="Starging Contacts creation&#8230;" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="filteredContactsCount" value="#[0]" doc:name="filteredContactsCount"/>
         <foreach doc:name="For Each">
-            <logger message="Creating Contact with email: #[payload['Email']]" level="INFO" doc:name="Logger"/>
-            <expression-transformer expression="#[flowVars['contactList'].add(payload)]" doc:name="Expression"/>
+            <custom-transformer class="org.mule.kicks.transformers.SFDCContactFilter" doc:name="SFDCContactFilter"/>
+            <choice doc:name="Choice">
+                <when expression="#[payload is NullPayload]">
+                    <logger message="Contact got filtered" level="INFO" doc:name="Logger"/>
+                </when>
+                <otherwise>
+                    <sfdc:create config-ref="SalesforceB" type="Contact" doc:name="Salesforce">
+                        <sfdc:objects ref="#[payload]"/>
+                    </sfdc:create>
+                </otherwise>
+            </choice>
         </foreach>
-        <sfdc:create config-ref="SalesforceB" type="Contact" doc:name="Salesforce">
-            <sfdc:objects ref="#[flowVars['contactList']]"/>
-        </sfdc:create>
-        <set-variable variableName="createResult" value="#[payload.get(0)]" doc:name="Variable"/>
     </sub-flow>
 </mule>
