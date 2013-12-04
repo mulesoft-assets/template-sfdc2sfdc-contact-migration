@@ -34,15 +34,4 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
             </choice>
         </foreach>
     </sub-flow>
-    <flow name="sfdc2sfdc-contactsyncFlow1" doc:name="sfdc2sfdc-contactsyncFlow1">
-        <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="9090" path="delete" doc:name="HTTP"/>
-        <set-variable variableName="v" value="#[new java.util.ArrayList()]" doc:name="v"/>
-        <sfdc:query config-ref="SalesforceB" query="dsql:SELECT AccountId,Id FROM Contact" doc:name="Salesforce"/>
-        <foreach doc:name="For Each">
-            <expression-transformer expression="#[flowVars['v'].add(payload)]" doc:name="Expression"/>
-        </foreach>
-        <sfdc:delete config-ref="SalesforceB" doc:name="Salesforce">
-            <sfdc:ids ref="#[flowVars['v']]"/>
-        </sfdc:delete>
-    </flow>
 </mule>
