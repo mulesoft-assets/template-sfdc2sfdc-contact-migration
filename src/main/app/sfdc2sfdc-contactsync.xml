@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
-http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd">
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
     <flow name="mainFlow" doc:name="mainFlow" doc:description="Here you should place the main business logic.">
         <flow-ref name="gatherDataFlow" doc:name="gatherDataFlow"/>
         <flow-ref name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow"/>
@@ -13,7 +14,7 @@ http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfd
     </flow>
     <sub-flow name="gatherDataFlow" doc:name="gatherDataFlow">
         <logger message="Gathering Contact's Data..." level="INFO" doc:name="Logger"/>
-		<sfdc:query config-ref="SalesforceA" query="dsql:SELECT Description, Email, FirstName, LastName, MailingCity, MailingCountry, MobilePhone, Phone, Title, Department FROM Contact ORDER BY Email ASC LIMIT 100" doc:name="Salesforce" fetchSize="1000"/>
+		<sfdc:query config-ref="SalesforceA" query="dsql:SELECT Description, Email, FirstName, LastName, MailingCity, MailingCountry, MobilePhone, Phone, Title, Department FROM Contact ORDER BY Email ASC" doc:name="Salesforce" fetchSize="1000"/>
         <set-variable variableName="contactCount" value="#[payload.size()]" doc:name="contactCount"/>
 	</sub-flow>
     <sub-flow name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow">
@@ -33,4 +34,15 @@ http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfd
             </choice>
         </foreach>
     </sub-flow>
+    <flow name="sfdc2sfdc-contactsyncFlow1" doc:name="sfdc2sfdc-contactsyncFlow1">
+        <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="9090" path="delete" doc:name="HTTP"/>
+        <set-variable variableName="v" value="#[new java.util.ArrayList()]" doc:name="v"/>
+        <sfdc:query config-ref="SalesforceB" query="dsql:SELECT AccountId,Id FROM Contact" doc:name="Salesforce"/>
+        <foreach doc:name="For Each">
+            <expression-transformer expression="#[flowVars['v'].add(payload)]" doc:name="Expression"/>
+        </foreach>
+        <sfdc:delete config-ref="SalesforceB" doc:name="Salesforce">
+            <sfdc:ids ref="#[flowVars['v']]"/>
+        </sfdc:delete>
+    </flow>
 </mule>
