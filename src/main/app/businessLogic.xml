@@ -22,8 +22,8 @@ http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mul
         <logger message="Starting contacts creation" level="INFO" doc:name="Logger"/>
         <set-variable variableName="filteredContactsCount" value="#[0]" doc:name="filteredContactsCount"/>
         <foreach doc:name="For Each">
-            <enricher doc:name="Message Enricher" source="#[payload]" target="#[flowVars['contactInB']]">
-                <sfdc:query-single config-ref="SalesforceB" query="#[ 'SELECT Id, LastModifiedDate FROM Contact WHERE Email = \'' + payload.get('Email') + '\'']" doc:name="Salesforce"/>
+            <enricher doc:name="Store in variable contactInB" source="#[payload]" target="#[flowVars['contactInB']]">
+                <sfdc:query-single config-ref="SalesforceB" query="#[ 'SELECT Id, LastModifiedDate FROM Contact WHERE Email = \'' + payload.get('Email') + '\'']" doc:name="Check contact in org B"/>
             </enricher>
             <custom-transformer class="org.mule.kicks.transformers.SFDCContactFilter" doc:name="SFDCContactFilter"/>
             <choice doc:name="Choice">
@@ -31,7 +31,7 @@ http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mul
                     <logger message="Contact got filtered" level="INFO" doc:name="Logger"/>
                 </when>
                 <otherwise>
-                    <sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="Salesforce" externalIdFieldName="Id">
+                    <sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="Upsert contact in org B" externalIdFieldName="Id">
                         <sfdc:objects ref="#[payload]"/>
                     </sfdc:upsert>
                 </otherwise>
