@@ -37,8 +37,6 @@ public class SFDCContactFilter extends AbstractMessageTransformer {
 
 		Map<String, String> contactInA = (Map<String, String>) message.getPayload();
 
-		System.out.println(contactInA.get("MailingCountry"));
-		
 		if (StringUtils.isEmpty(contactInA.get(MAILING_COUNTRY_KEY))) {
 			message.setPayload(null);
 			return message;
@@ -68,6 +66,7 @@ public class SFDCContactFilter extends AbstractMessageTransformer {
 					contactToSync.add(contactInA);
 					message.setPayload(contactToSync);
 				} else {
+					increaseFilteredContactsCount(message);
 					message.setPayload(null);
 				}
 			}
@@ -81,13 +80,6 @@ public class SFDCContactFilter extends AbstractMessageTransformer {
 		return message;
 	}
 	
-	private Map<String, String> createContatToImport(Map<String, String> contactInA, Map<String, String> contactInB){
-		if (contactInB != null) {
-			contactInA.put("Id", contactInA.get("ID"));
-		} 
-		return contactInA;
-	}
-
 	private void increaseFilteredContactsCount(MuleMessage message) {
 		Integer filteredCount = (Integer) message.getInvocationProperty(FILTERED_CONTACTS_COUNT);
 		if (filteredCount == null) {
