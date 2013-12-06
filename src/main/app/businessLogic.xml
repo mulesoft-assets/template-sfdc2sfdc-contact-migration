@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
-http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
-http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+<mule xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
     <flow name="mainFlow" doc:name="mainFlow" doc:description="Here you should place the main business logic.">
         <flow-ref name="gatherDataFlow" doc:name="gatherDataFlow"/> 
-        <flow-ref name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow"/>
-        <logger message="Amount of contacts #[flowVars['contactCount']] - Contacts Filtered #[flowVars['filteredContactsCount']]&#160;" level="INFO" doc:name="Logger"/>
+        <flow-ref name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow"/> 
+        <logger message="Amount of contacts #[flowVars['contactCount']] - Contacts Filtered #[flowVars['filteredContactsCount']]" level="INFO" doc:name="Logger"/>
         <set-payload value="Amount of contacts migrated #[flowVars['contactCount']] - Amount of contacts Filtered #[flowVars['filteredContactsCount']]" doc:name="Set Payload"/>
         <exception-strategy ref="defaultChoiceExceptionStrategy" doc:name="Reference Exception Strategy"/>
     </flow>
     <sub-flow name="gatherDataFlow" doc:name="gatherDataFlow">
         <logger message="Gathering contact's data" level="INFO" doc:name="Logger"/>
-		<sfdc:query config-ref="SalesforceA" query="dsql:SELECT Department,Description,Email,FirstName,LastModifiedDate,LastName,MailingCity,MailingCountry,MobilePhone,Phone,Title FROM Contact WHERE (Email &lt;&gt; '' AND MailingCountry = 'USA') ORDER BY Email ASC" doc:name="Salesforce" fetchSize="1000"/>
+		<sfdc:query config-ref="SalesforceA" query="dsql:SELECT Department,Description,Email,FirstName,LastModifiedDate,LastName,MailingCity,MailingCountry,MobilePhone,Phone,Title FROM Contact WHERE (MailingCountry = 'USA' AND Email &lt;&gt; '') ORDER BY Email ASC" doc:name="Salesforce" fetchSize="${page.size}"/>
         <set-variable variableName="contactCount" value="#[payload.size()]" doc:name="contactCount"/>
 	</sub-flow>
     <sub-flow name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow">
         <logger message="Starting contacts creation" level="INFO" doc:name="Logger"/>
         <set-variable variableName="filteredContactsCount" value="#[0]" doc:name="filteredContactsCount"/>
+        <foreach doc:name="For Each" batchSize="${page.size}">
+            <flow-ref name="filterFlow" doc:name="filterFlow"/>
+            <expression-filter expression="#[!payload.isEmpty()]" doc:name="Expression"/>
+            <sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="Upsert contact in org B" externalIdFieldName="Id">
+                <sfdc:objects ref="#[payload]"/>
+            </sfdc:upsert>
+        </foreach>
+    </sub-flow>
+    <sub-flow name="filterFlow" doc:name="filterFlow">
+        <set-variable variableName="filteredContactList" value="#[new java.util.ArrayList()]" doc:name="filteredContactList"/>
         <foreach doc:name="For Each">
-            <enricher doc:name="Store in variable contactInB" source="#[payload]" target="#[flowVars['contactInB']]">
+            <enricher source="#[payload]" target="#[flowVars['contactInB']]" doc:name="Store in variable contactInB">
                 <sfdc:query-single config-ref="SalesforceB" query="#[ 'SELECT Id, LastModifiedDate FROM Contact WHERE Email = \'' + payload.get('Email') + '\'']" doc:name="Check contact in org B"/>
             </enricher>
             <custom-transformer class="org.mule.kicks.transformers.SFDCContactFilter" doc:name="SFDCContactFilter"/>
-            <choice doc:name="Choice">
-                <when expression="#[payload is NullPayload]">
-                    <logger message="Contact got filtered" level="INFO" doc:name="Logger"/>
-                </when>
-                <otherwise>
-                    <sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="Upsert contact in org B" externalIdFieldName="Id">
-                        <sfdc:objects ref="#[payload]"/>
-                    </sfdc:upsert>
-                </otherwise>
-            </choice>
+            <expression-component doc:name="Expression"><![CDATA[#[flowVars['filteredContactList'].add(payload)]]]></expression-component>
         </foreach>
+        <set-payload value="#[flowVars['filteredContactList']]" doc:name="Set Payload"/>
     </sub-flow>
 </mule>

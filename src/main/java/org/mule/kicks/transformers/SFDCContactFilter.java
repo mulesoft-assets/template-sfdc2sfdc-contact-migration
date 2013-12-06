@@ -1,8 +1,6 @@
 package org.mule.kicks.transformers;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -23,64 +21,44 @@ import org.mule.transport.NullPayload;
  * @author damiansima
  */
 public class SFDCContactFilter extends AbstractMessageTransformer {
-	private static final String EMAIL_KEY = "Email";
-	private static final String MAILING_COUNTRY_KEY = "MailingCountry";
-	private static final String VALID_COUNTRY = "USA";
-	private static final String FILTERED_CONTACTS_COUNT = "filteredContactsCount";
-	private static final String LAST_MODIFIED_DATE = "LastModifiedDate";
-	private static final String CONTACT_IN_COMPANY_B = "contactInB";
 	private static final String ID_FIELD = "Id";
+	private static final String CONTACT_IN_COMPANY_B = "contactInB";
+	private static final String LAST_MODIFIED_DATE = "LastModifiedDate";
+	private static final String FILTERED_CONTACTS_COUNT = "filteredContactsCount";
 
 	private final static Logger logger = Logger.getLogger(SFDCContactFilter.class);
 
 	@Override
 	public Object transformMessage(MuleMessage message, String outputEncoding) throws TransformerException {
 
+		List<Map<String, String>> contactToSync = new ArrayList<Map<String, String>>();
+
 		Map<String, String> contactInA = (Map<String, String>) message.getPayload();
+		if (message.getInvocationProperty(CONTACT_IN_COMPANY_B) instanceof NullPayload) {
 
-		if (StringUtils.isEmpty(contactInA.get(MAILING_COUNTRY_KEY))) {
-			message.setPayload(null);
-			return message;
-		}
-		
+			contactInA.remove(LAST_MODIFIED_DATE);
+			contactToSync.add(contactInA);
 
-		if (StringUtils.isNotEmpty(contactInA.get(EMAIL_KEY)) && contactInA.get(MAILING_COUNTRY_KEY).equals(VALID_COUNTRY) ) {
+		} else {
+			Map<String, String> contactInB = message.getInvocationProperty(CONTACT_IN_COMPANY_B);
 			
-			List<Map<String, String>> contactToSync = new ArrayList<Map<String, String>>();
-			
-			if ( message.getInvocationProperty(CONTACT_IN_COMPANY_B) instanceof NullPayload) {
-				
+			DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+			DateTime lastModifiedDateOfA = formatter.parseDateTime(contactInA.get(LAST_MODIFIED_DATE));
+			DateTime lastModifiedDateOfB = formatter.parseDateTime(contactInB.get(LAST_MODIFIED_DATE));
+
+			if (lastModifiedDateOfA.isAfter(lastModifiedDateOfB)) {
+				contactInA.put(ID_FIELD, contactInB.get(ID_FIELD));
 				contactInA.remove(LAST_MODIFIED_DATE);
 				contactToSync.add(contactInA);
-				message.setPayload(contactToSync);
-			
 			} else {
-			
-				Map<String, String> contactInB = message.getInvocationProperty(CONTACT_IN_COMPANY_B);
-				DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-				DateTime lastModifiedDateOfA = formatter.parseDateTime(contactInA.get(LAST_MODIFIED_DATE));
-				DateTime lastModifiedDateOfB = formatter.parseDateTime(contactInB.get(LAST_MODIFIED_DATE));
-
-				if (lastModifiedDateOfA.isAfter(lastModifiedDateOfB)){
-					contactInA.put(ID_FIELD, contactInB.get(ID_FIELD));
-					contactInA.remove(LAST_MODIFIED_DATE);
-					contactToSync.add(contactInA);
-					message.setPayload(contactToSync);
-				} else {
-					increaseFilteredContactsCount(message);
-					message.setPayload(null);
-				}
+				increaseFilteredContactsCount(message);
 			}
-			
-			
-		} else {
-			increaseFilteredContactsCount(message);
-			message.setPayload(null);
 		}
-		
+
+		message.setPayload(contactToSync);
 		return message;
 	}
-	
+
 	private void increaseFilteredContactsCount(MuleMessage message) {
 		Integer filteredCount = (Integer) message.getInvocationProperty(FILTERED_CONTACTS_COUNT);
 		if (filteredCount == null) {
