@@ -25,10 +25,11 @@ import org.mule.transport.NullPayload;
 public class SFDCContactFilter extends AbstractMessageTransformer {
 	private static final String EMAIL_KEY = "Email";
 	private static final String MAILING_COUNTRY_KEY = "MailingCountry";
-
 	private static final String VALID_COUNTRY = "USA";
-
 	private static final String FILTERED_CONTACTS_COUNT = "filteredContactsCount";
+	private static final String LAST_MODIFIED_DATE = "LastModifiedDate";
+	private static final String CONTACT_IN_COMPANY_B = "contactInB";
+	private static final String ID_FIELD = "Id";
 
 	private final static Logger logger = Logger.getLogger(SFDCContactFilter.class);
 
@@ -47,22 +48,22 @@ public class SFDCContactFilter extends AbstractMessageTransformer {
 			
 			List<Map<String, String>> contactToSync = new ArrayList<Map<String, String>>();
 			
-			if ( message.getInvocationProperty("contactInB") instanceof NullPayload) {
+			if ( message.getInvocationProperty(CONTACT_IN_COMPANY_B) instanceof NullPayload) {
 				
-				contactInA.remove("LastModifiedDate");
+				contactInA.remove(LAST_MODIFIED_DATE);
 				contactToSync.add(contactInA);
 				message.setPayload(contactToSync);
 			
 			} else {
 			
-				Map<String, String> contactInB = message.getInvocationProperty("contactInB");
+				Map<String, String> contactInB = message.getInvocationProperty(CONTACT_IN_COMPANY_B);
 				DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-				DateTime lastModifiedDateOfA = formatter.parseDateTime(contactInA.get("LastModifiedDate"));
-				DateTime lastModifiedDateOfB = formatter.parseDateTime(contactInB.get("LastModifiedDate"));
+				DateTime lastModifiedDateOfA = formatter.parseDateTime(contactInA.get(LAST_MODIFIED_DATE));
+				DateTime lastModifiedDateOfB = formatter.parseDateTime(contactInB.get(LAST_MODIFIED_DATE));
 
 				if (lastModifiedDateOfA.isAfter(lastModifiedDateOfB)){
-					contactInA.put("Id", contactInB.get("Id"));
-					contactInA.remove("LastModifiedDate");
+					contactInA.put(ID_FIELD, contactInB.get(ID_FIELD));
+					contactInA.remove(LAST_MODIFIED_DATE);
 					contactToSync.add(contactInA);
 					message.setPayload(contactToSync);
 				} else {
