@@ -13,7 +13,11 @@ import org.mule.transport.NullPayload;
 
 /**
  * The purpose of this class is to decide whether or not a contact should be
- * sync.
+ * sync. Provided two contacts one from Org A (source) and one from Org B
+ * (destination) the class will decided which one to use.
+ * 
+ * The newest Last modified date will win. Should no contact in Org B is
+ * provided then the contact in Org A will be sync.
  * 
  * @author damiansima
  */
@@ -30,13 +34,13 @@ public class SFDCContactFilter extends AbstractMessageTransformer {
 	public Object transformMessage(MuleMessage message, String outputEncoding) throws TransformerException {
 
 		Map<String, String> contactInA = (Map<String, String>) message.getPayload();
-		
+
 		if (message.getInvocationProperty(CONTACT_IN_COMPANY_B) instanceof NullPayload) {
 			contactInA.remove(FIELD_TYPE);
 			contactInA.remove(LAST_MODIFIED_DATE);
 		} else {
 			Map<String, String> contactInB = message.getInvocationProperty(CONTACT_IN_COMPANY_B);
-			
+
 			DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 			DateTime lastModifiedDateOfA = formatter.parseDateTime(contactInA.get(LAST_MODIFIED_DATE));
 			DateTime lastModifiedDateOfB = formatter.parseDateTime(contactInB.get(LAST_MODIFIED_DATE));
