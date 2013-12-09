@@ -21,8 +21,8 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
         <set-variable variableName="filteredContactsCount" value="#[0]" doc:name="filteredContactsCount"/>
         <foreach doc:name="For Each" batchSize="${page.size}">
             <flow-ref name="filterFlow" doc:name="filterFlow"/>
-            <expression-filter expression="#[!payload.isEmpty()]" doc:name="Expression"/>
-            <sfdc:upsert-bulk config-ref="SalesforceB"  type="Contact" doc:name="Upsert contact in org B" externalIdFieldName="Id">
+            <expression-filter expression="#[!payload.isEmpty()]" doc:name="Filter if Payload is empty"/>
+            <sfdc:upsert-bulk config-ref="SalesforceB"  type="Contact" doc:name="Upsert contacts in org B" externalIdFieldName="Id">
                 <sfdc:objects ref="#[payload]"/>
             </sfdc:upsert-bulk>
             <logger level="INFO" doc:name="Logger"/>
@@ -32,12 +32,12 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
         <set-variable variableName="filteredContactList" value="#[new java.util.ArrayList()]" doc:name="filteredContactList"/>
         <foreach doc:name="For Each">
             <enricher source="#[payload]" target="#[flowVars['contactInB']]" doc:name="Store in variable contactInB">
-                <sfdc:query-single config-ref="SalesforceB" query="#[ 'SELECT Id, LastModifiedDate FROM Contact WHERE Email = \'' + payload.get('Email') + '\'']" doc:name="Check contact in org B"/>
+                <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, LastModifiedDate FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="Check contact in org B"/>
             </enricher>
             <custom-transformer class="org.mule.kicks.transformers.SFDCContactFilter" doc:name="SFDCContactFilter"/>
-            <expression-filter expression="#[!(payload is  NullPayload)]" doc:name="Expression"/>
-            <expression-component doc:name="Expression"><![CDATA[#[flowVars['filteredContactList'].add(payload)]]]></expression-component>
+            <expression-filter expression="#[!(payload is  NullPayload)]" doc:name="Filter if Payload is NullPayload"/>
+            <expression-component doc:name="Add Contact to filteredContactList"><![CDATA[#[flowVars['filteredContactList'].add(payload)]]]></expression-component>
         </foreach>
-        <set-payload value="#[flowVars['filteredContactList']]" doc:name="Set Payload"/>
+        <set-payload value="#[flowVars['filteredContactList']]" doc:name="Set filteredContactList as Payload"/>
     </sub-flow>
 </mule>
