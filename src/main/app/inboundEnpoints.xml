@@ -7,7 +7,7 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
 	
 	<!-- 	In this file you should declare all your inbound endpoints and from here controll the access to your application -->
 	<flow name="inboundFlow" processingStrategy="synchronous" doc:name="inboundFlow">
-        <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="${http.port}" path="trigger" doc:name="Start Synchronization"/>
+        <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="${http.port}" path="synccontacts" doc:name="Start Synchronization"/>
         <flow-ref name="mainFlow" doc:description="Report generation"  doc:name="mainFlow"/>
     </flow>
 </mule>
