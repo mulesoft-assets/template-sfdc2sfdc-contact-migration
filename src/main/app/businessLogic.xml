@@ -22,9 +22,10 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
         <foreach doc:name="For Each" batchSize="${page.size}">
             <flow-ref name="filterFlow" doc:name="filterFlow"/>
             <expression-filter expression="#[!payload.isEmpty()]" doc:name="Expression"/>
-            <sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="Upsert contact in org B" externalIdFieldName="Id">
+            <sfdc:upsert-bulk config-ref="SalesforceB"  type="Contact" doc:name="Upsert contact in org B" externalIdFieldName="Id">
                 <sfdc:objects ref="#[payload]"/>
-            </sfdc:upsert>
+            </sfdc:upsert-bulk>
+            <logger level="INFO" doc:name="Logger"/>
         </foreach>
     </sub-flow>
     <sub-flow name="filterFlow" doc:name="filterFlow">
@@ -34,6 +35,7 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
                 <sfdc:query-single config-ref="SalesforceB" query="#[ 'SELECT Id, LastModifiedDate FROM Contact WHERE Email = \'' + payload.get('Email') + '\'']" doc:name="Check contact in org B"/>
             </enricher>
             <custom-transformer class="org.mule.kicks.transformers.SFDCContactFilter" doc:name="SFDCContactFilter"/>
+            <expression-filter expression="#[!(payload is  NullPayload)]" doc:name="Expression"/>
             <expression-component doc:name="Expression"><![CDATA[#[flowVars['filteredContactList'].add(payload)]]]></expression-component>
         </foreach>
         <set-payload value="#[flowVars['filteredContactList']]" doc:name="Set Payload"/>

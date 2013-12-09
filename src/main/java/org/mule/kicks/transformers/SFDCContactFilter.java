@@ -1,10 +1,7 @@
 package org.mule.kicks.transformers;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -21,6 +18,7 @@ import org.mule.transport.NullPayload;
  * @author damiansima
  */
 public class SFDCContactFilter extends AbstractMessageTransformer {
+	private static final String FIELD_TYPE = "type";
 	private static final String ID_FIELD = "Id";
 	private static final String CONTACT_IN_COMPANY_B = "contactInB";
 	private static final String LAST_MODIFIED_DATE = "LastModifiedDate";
@@ -31,14 +29,11 @@ public class SFDCContactFilter extends AbstractMessageTransformer {
 	@Override
 	public Object transformMessage(MuleMessage message, String outputEncoding) throws TransformerException {
 
-		List<Map<String, String>> contactToSync = new ArrayList<Map<String, String>>();
-
 		Map<String, String> contactInA = (Map<String, String>) message.getPayload();
+		
 		if (message.getInvocationProperty(CONTACT_IN_COMPANY_B) instanceof NullPayload) {
-
+			contactInA.remove(FIELD_TYPE);
 			contactInA.remove(LAST_MODIFIED_DATE);
-			contactToSync.add(contactInA);
-
 		} else {
 			Map<String, String> contactInB = message.getInvocationProperty(CONTACT_IN_COMPANY_B);
 			
@@ -47,15 +42,15 @@ public class SFDCContactFilter extends AbstractMessageTransformer {
 			DateTime lastModifiedDateOfB = formatter.parseDateTime(contactInB.get(LAST_MODIFIED_DATE));
 
 			if (lastModifiedDateOfA.isAfter(lastModifiedDateOfB)) {
-				contactInA.put(ID_FIELD, contactInB.get(ID_FIELD));
+				contactInA.remove(FIELD_TYPE);
 				contactInA.remove(LAST_MODIFIED_DATE);
-				contactToSync.add(contactInA);
+				contactInA.put(ID_FIELD, contactInB.get(ID_FIELD));
 			} else {
+				contactInA = null;
 				increaseFilteredContactsCount(message);
 			}
 		}
-
-		message.setPayload(contactToSync);
+		message.setPayload(contactInA);
 		return message;
 	}
 
