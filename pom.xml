@@ -410,7 +410,7 @@
 <dependency>
 <groupId>org.mule.modules</groupId>
 <artifactId>mule-module-sfdc</artifactId>
-<version>5.4.2</version>
+<version>5.4.1</version>
 </dependency>
 </dependencies>
 
