@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 	
 	<!-- 	In this file you should declare all your inbound endpoints and from here controll the access to your application -->
 	<flow name="inboundFlow" processingStrategy="synchronous" doc:name="inboundFlow">
         <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="${http.port}" path="trigger" doc:name="Start Synchronization"/>
+        <flow-ref name="configurationToVariable" doc:name="configurationToVariable"/>
+        <component  doc:name="ConfigurationValidator"><spring-object bean="ConfigurationValidator"/></component>
         <flow-ref name="mainFlow" doc:description="Report generation"  doc:name="mainFlow"/>
     </flow>
+    
+    <sub-flow name="configurationToVariable" doc:name="configurationToVariable">
+     	<set-variable variableName="syncObjectType" value="${sync.object.type}" doc:name="syncObjectType"/>
+		<set-variable variableName="syncFieldList" value="${sync.field.list}" doc:name="syncFieldList"/>
+		<set-variable variableName="syncFilterConditions" value="${sync.filter.conditions}" doc:name="syncFilterConditions"/>
+    </sub-flow>
 </mule>
