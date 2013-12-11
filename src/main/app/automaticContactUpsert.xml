@@ -11,7 +11,7 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
      <flow name="upsertCotactFromAToB" doc:name="upsertCotactFromAToB">
-        <sfdc:subscribe-topic config-ref="SalesforceA" topic="/testtopic" doc:name="Contact create/update "/>
+        <sfdc:subscribe-topic config-ref="SalesforceA" topic="${sfdc.a.topic}" doc:name="Contact create/update "/>
         <logger message="Contact created/updated in Org A #[payload]" level="INFO" doc:name="Details of contact received"/>
         <expression-filter expression="#[(!(payload.get('Email') == null))]" doc:name="Filter if Cotact has no Email"/>
         <enricher source="#[payload]" target="#[flowVars['idInB']]" doc:name="Store in variable idInB">
