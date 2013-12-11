@@ -25,7 +25,6 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
             <sfdc:upsert-bulk config-ref="SalesforceB"  type="Contact" doc:name="Upsert contacts in org B" externalIdFieldName="Id">
                 <sfdc:objects ref="#[payload]"/>
             </sfdc:upsert-bulk>
-            <logger level="INFO" doc:name="Logger"/>
         </foreach>
     </sub-flow>
     <sub-flow name="filterFlow" doc:name="filterFlow">
