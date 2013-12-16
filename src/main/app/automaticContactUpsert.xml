@@ -13,7 +13,7 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
      <flow name="upsertCotactFromAToB" doc:name="upsertCotactFromAToB">
         <sfdc:subscribe-topic config-ref="SalesforceA" topic="${sfdc.a.topic}" doc:name="Contact create/update "/>
         <logger message="Contact created/updated in Org A #[payload]" level="INFO" doc:name="Details of contact received"/>
-        <expression-filter expression="#[(!(payload.get('Email') == null))]" doc:name="Filter if Cotact has no Email"/>
+        <expression-filter expression="#[(payload.get('Email') != null) &amp;&amp; ( (payload.get('MailingCountry').equals('United States')) || (payload.get('MailingCountry').equals('US')) || (payload.get('MailingCountry').equals('U.S.')))]" doc:name="Filter if Cotact has no Email"/>
         <enricher source="#[payload]" target="#[flowVars['idInB']]" doc:name="Store in variable idInB">
         	<sfdc:query-single config-ref="SalesforceB" query="SELECT Id FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="Check contact in org B"/>
         </enricher>
