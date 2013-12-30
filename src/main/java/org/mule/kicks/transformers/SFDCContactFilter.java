@@ -22,13 +22,11 @@ import org.mule.transport.NullPayload;
  * @author damiansima
  */
 public class SFDCContactFilter extends AbstractMessageTransformer {
-	private static final String FIELD_TYPE = "type";
 	private static final String ID_FIELD = "Id";
+	private static final String FIELD_TYPE = "type";
 	private static final String CONTACT_IN_COMPANY_B = "contactInB";
 	private static final String LAST_MODIFIED_DATE = "LastModifiedDate";
 	private static final String FILTERED_CONTACTS_COUNT = "filteredContactsCount";
-
-	private final static Logger logger = Logger.getLogger(SFDCContactFilter.class);
 
 	@Override
 	public Object transformMessage(MuleMessage message, String outputEncoding) throws TransformerException {
