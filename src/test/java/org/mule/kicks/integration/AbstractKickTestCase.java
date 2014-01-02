@@ -47,17 +47,20 @@ public class AbstractKickTestCase extends FunctionalTestCase {
 	}
 
 	protected String getTestFlows() {
-		File testFlowsFolder = new File(TEST_FLOWS_FOLDER_PATH);
-		File[] listOfFiles = testFlowsFolder.listFiles();
-
 		StringBuilder resources = new StringBuilder();
 
-		for (File f : listOfFiles) {
-			if (f.isFile() && f.getName().endsWith("xml")) {
-				resources.append(",").append(TEST_FLOWS_FOLDER_PATH).append(f.getName());
+		File testFlowsFolder = new File(TEST_FLOWS_FOLDER_PATH);
+		File[] listOfFiles = testFlowsFolder.listFiles();
+		if (listOfFiles != null) {
+			for (File f : listOfFiles) {
+				if (f.isFile() && f.getName().endsWith("xml")) {
+					resources.append(",").append(TEST_FLOWS_FOLDER_PATH).append(f.getName());
+				}
 			}
+			return resources.toString();
+		} else {
+			return "";
 		}
-		return resources.toString();
 	}
 
 	@Override
