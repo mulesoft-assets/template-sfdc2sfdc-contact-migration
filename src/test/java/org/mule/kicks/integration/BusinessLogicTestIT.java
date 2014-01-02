@@ -1,26 +1,19 @@
 package org.mule.kicks.integration;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import junit.framework.Assert;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mule.MessageExchangePattern;
 import org.mule.api.MuleEvent;
-import org.mule.api.config.MuleProperties;
 import org.mule.construct.Flow;
 import org.mule.processor.chain.SubflowInterceptingChainLifecycleWrapper;
-import org.mule.tck.junit4.FunctionalTestCase;
 import org.mule.transport.NullPayload;
 
 import com.sforce.soap.partner.SaveResult;
@@ -31,20 +24,10 @@ import com.sforce.soap.partner.SaveResult;
  * 
  * @author damiansima
  */
-public class BusinessLogicTestIT extends FunctionalTestCase {
+public class BusinessLogicTestIT extends AbstractKickTestCase {
 
 	private static SubflowInterceptingChainLifecycleWrapper checkContactflow;
 	private static List<Map<String, String>> createdContacts = new ArrayList<Map<String, String>>();
-
-	@BeforeClass
-	public static void beforeClass() {
-		System.setProperty("mule.env", "test");
-	}
-
-	@AfterClass
-	public static void afterClass() {
-		System.getProperties().remove("mule.env");
-	}
 
 	@Before
 	@SuppressWarnings("unchecked")
@@ -101,33 +84,6 @@ public class BusinessLogicTestIT extends FunctionalTestCase {
 		flow.process(getTestEvent(idList, MessageExchangePattern.REQUEST_RESPONSE));
 	}
 
-	@Override
-	protected String getConfigResources() {
-		String resources = "";
-		try {
-			Properties props = new Properties();
-			props.load(new FileInputStream("./src/main/app/mule-deploy.properties"));
-			resources = props.getProperty("config.resources");
-		} catch (Exception e) {
-			throw new IllegalStateException(
-					"Could not find mule-deploy.properties file on classpath. Please add any of those files or override the getConfigResources() method to provide the resources by your own.");
-		}
-
-		return resources + ",./flows/test-flows.xml";
-	}
-
-	@Override
-	protected Properties getStartUpProperties() {
-		Properties properties = new Properties(super.getStartUpProperties());
-
-		String pathToResource = "./mappings";
-		File graphFile = new File(pathToResource);
-
-		properties.put(MuleProperties.APP_HOME_DIRECTORY_PROPERTY, graphFile.getAbsolutePath());
-
-		return properties;
-	}
-
 	@Test
 	@SuppressWarnings("unchecked")
 	public void testMainFlow() throws Exception {
@@ -161,14 +117,6 @@ public class BusinessLogicTestIT extends FunctionalTestCase {
 		} else {
 			return (Map<String, String>) payload;
 		}
-	}
-
-	private Flow getFlow(String flowName) {
-		return (Flow) muleContext.getRegistry().lookupObject(flowName);
-	}
-
-	private SubflowInterceptingChainLifecycleWrapper getSubFlow(String flowName) {
-		return (SubflowInterceptingChainLifecycleWrapper) muleContext.getRegistry().lookupObject(flowName);
 	}
 
 	private Map<String, String> createContact(String orgId, int sequence) {
