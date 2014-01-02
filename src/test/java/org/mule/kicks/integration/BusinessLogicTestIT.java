@@ -17,7 +17,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mule.MessageExchangePattern;
 import org.mule.api.MuleEvent;
-import org.mule.api.MuleException;
 import org.mule.api.config.MuleProperties;
 import org.mule.construct.Flow;
 import org.mule.processor.chain.SubflowInterceptingChainLifecycleWrapper;
@@ -114,7 +113,7 @@ public class BusinessLogicTestIT extends FunctionalTestCase {
 					"Could not find mule-deploy.properties file on classpath. Please add any of those files or override the getConfigResources() method to provide the resources by your own.");
 		}
 
-		return resources + ",./configurations/test-flows.xml";
+		return resources + ",./flows/test-flows.xml";
 	}
 
 	@Override
