@@ -27,7 +27,7 @@ public class AbstractKickTestCase extends FunctionalTestCase {
 	}
 
 	@AfterClass
-	public static void afterClass() {
+	public static void afterClass() { 
 		System.getProperties().remove("mule.env");
 	}
 
