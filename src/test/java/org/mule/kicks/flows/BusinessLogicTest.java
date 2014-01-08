@@ -14,15 +14,6 @@ import org.mule.munit.runner.functional.FunctionalMunitSuite;
 import org.mule.streaming.ConsumerIterator;
 
 public class BusinessLogicTest extends FunctionalMunitSuite {
-	@BeforeClass
-	public static void beforeClass() {
-		System.setProperty("mule.env", "test");
-	}
-
-	@AfterClass
-	public static void afterClass() {
-		System.getProperties().remove("mule.env");
-	}
 
 	@Before
 	public void setUp() {
