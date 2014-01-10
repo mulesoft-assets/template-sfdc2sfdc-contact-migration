@@ -50,4 +50,4 @@ target/
 # --------------------------------------- #
 # Test credentials to be use locally only #
 # --------------------------------------- #
-**/mule.test.properties
+src/test/resources/mule.test.properties
