@@ -10,6 +10,9 @@ import org.mule.api.transformer.TransformerException;
 import org.mule.transformer.AbstractMessageTransformer;
 import org.mule.transport.NullPayload;
 
+import com.mulesoft.module.batch.el.BatchElExtension;
+import com.mulesoft.module.batch.record.Record;
+
 /**
  * The purpose of this class is to decide whether or not a contact should be
  * sync. Provided two contacts one from Org A (source) and one from Org B
@@ -20,48 +23,42 @@ import org.mule.transport.NullPayload;
  * 
  * @author damiansima
  */
-public class SFDCContactFilter extends AbstractMessageTransformer {
+public class SFDCContactFilterBatch extends AbstractMessageTransformer {
 	private static final String ID_FIELD = "Id";
 	private static final String FIELD_TYPE = "type";
-	private static final String CONTACT_IN_COMPANY_B = "contactInB";
 	private static final String LAST_MODIFIED_DATE = "LastModifiedDate";
-	private static final String FILTERED_CONTACTS_COUNT = "filteredContactsCount";
+
+	private static final String CONTACT_IN_COMPANY_B = "contactInB";
 
 	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Object transformMessage(MuleMessage message, String outputEncoding) throws TransformerException {
+
+		Record record = message.getInvocationProperty(BatchElExtension.RECORD);
 
 		Map<String, String> contactInA = (Map<String, String>) message.getPayload();
 
-		if (message.getInvocationProperty(CONTACT_IN_COMPANY_B) instanceof NullPayload) {
-			contactInA.remove(FIELD_TYPE);
-			contactInA.remove(LAST_MODIFIED_DATE);
-		} else {
-			Map<String, String> contactInB = message.getInvocationProperty(CONTACT_IN_COMPANY_B);
+		contactInA.remove(FIELD_TYPE);
+		contactInA.remove(LAST_MODIFIED_DATE);
 
-			DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-			DateTime lastModifiedDateOfA = formatter.parseDateTime(contactInA.get(LAST_MODIFIED_DATE));
-			DateTime lastModifiedDateOfB = formatter.parseDateTime(contactInB.get(LAST_MODIFIED_DATE));
+		if (!(record.getVariable(CONTACT_IN_COMPANY_B) instanceof NullPayload)) {
+			Map<String, String> contactInB = (Map<String, String>) record.getVariable(CONTACT_IN_COMPANY_B);
 
-			if (lastModifiedDateOfA.isAfter(lastModifiedDateOfB)) {
-				contactInA.remove(FIELD_TYPE);
-				contactInA.remove(LAST_MODIFIED_DATE);
+			if (isAfter(contactInA, contactInB)) {
 				contactInA.put(ID_FIELD, contactInB.get(ID_FIELD));
 			} else {
 				contactInA = null;
-				increaseFilteredContactsCount(message);
 			}
 		}
 		message.setPayload(contactInA);
 		return message;
 	}
 
-	private void increaseFilteredContactsCount(MuleMessage message) {
-		Integer filteredCount = (Integer) message.getInvocationProperty(FILTERED_CONTACTS_COUNT);
-		if (filteredCount == null) {
-			filteredCount = 0;
-		}
-		filteredCount++;
-		message.setInvocationProperty(FILTERED_CONTACTS_COUNT, filteredCount);
-	}
+	private boolean isAfter(Map<String, String> contactA, Map<String, String> contactB) {
+		DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+		DateTime lastModifiedDateOfA = formatter.parseDateTime(contactA.get(LAST_MODIFIED_DATE));
+		DateTime lastModifiedDateOfB = formatter.parseDateTime(contactB.get(LAST_MODIFIED_DATE));
 
+		return lastModifiedDateOfA.isAfter(lastModifiedDateOfB);
+	}
 }
