@@ -46,3 +46,8 @@ local.properties
 ./flows/
 target/
 **/*.mflow
+
+# --------------------------------------- #
+# Test credentials to be use locally only #
+# --------------------------------------- #
+**/mule.test.properties
