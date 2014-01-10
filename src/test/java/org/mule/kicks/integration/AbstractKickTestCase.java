@@ -21,15 +21,17 @@ public class AbstractKickTestCase extends FunctionalTestCase {
 	private static final String TEST_FLOWS_FOLDER_PATH = "./src/test/resources/flows/";
 	private static final String MULE_DEPLOY_PROPERTIES_PATH = "./src/main/app/mule-deploy.properties";
 
-	@BeforeClass
-	public static void beforeClass() {
-		System.setProperty("mule.env", "test");
-	}
 
-	@AfterClass
-	public static void afterClass() { 
-		System.getProperties().remove("mule.env");
-	}
+
+  @BeforeClass
+   public static void beforeClass() {
+     System.setProperty("mule.env", "test");
+   }
+ 
+   @AfterClass
+   public static void afterClass() { 
+     System.getProperties().remove("mule.env");
+  }
 
 	@Override
 	protected String getConfigResources() {
