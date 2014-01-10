@@ -11,7 +11,7 @@ http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smt
         <batch:threading-profile poolExhaustedAction="WAIT"/>
         <batch:input>
             <sfdc:query config-ref="SalesforceA" query="dsql:SELECT Department,Description,Email,FirstName,LastModifiedDate,LastName,MailingCity,MailingCountry,MobilePhone,Phone,Title FROM Contact WHERE (MailingCountry = 'USA' AND Email &lt;&gt; '') ORDER BY Email ASC" doc:name="Salesforce" fetchSize="${page.size}"/>
-        </batch:input>
+        </batch:input> 
         <batch:process-records>
             <batch:step name="getContactInB">
                 <enricher source="#[payload]" target="#[recordVars['recordInB']]" doc:name="Message Enricher">
