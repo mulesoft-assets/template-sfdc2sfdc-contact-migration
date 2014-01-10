@@ -6,7 +6,7 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
     <flow name="mainFlow" doc:name="mainFlow" doc:description="Here you should place the main business logic.">
-        <flow-ref name="gatherDataFlow" doc:name="gatherDataFlow"/> 
+        <flow-ref name="gatherDataFlow" doc:name="gatherDataFlow"/>
         <flow-ref name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow"/> 
         <logger message="Amount of contacts #[flowVars['contactCount']] - Contacts Filtered #[flowVars['filteredContactsCount']]" level="INFO" doc:name="Logger"/>
         <set-payload value="Amount of contacts migrated #[flowVars['contactCount']] - Amount of contacts Filtered #[flowVars['filteredContactsCount']]" doc:name="Set Payload"/>
