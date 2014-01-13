@@ -10,6 +10,9 @@
     * [endpoints.xml](#endpointsxml)
     * [businessLogic.xml](#businesslogicxml)
     * [errorHandling.xml](#errorhandlingxml)
++ [Testing the Kick](#testingthekick)
+
+   
 
 
 # Use Case <a name="usecase"/>
@@ -17,7 +20,12 @@ As a Salesforce admin I want to syncronize contacts between two Salesfoce orgs.
 
 This Kick (template) should serve as a foundation for the process of migrating contacts from one Salesfoce instance to another, being able to specify filtering criterias and desired behaviour when a contact already exists in the destination org. 
 
-As implemented, for each one of the contacts from one instance of Salesforce, determines if it meets the requirements to be synced and if so, checks if the contact already exists syncing only if the record from the target instance is older. 
+As implemented, this Kick leverage the [Batch Module](http://www.mulesoft.org/documentation/display/current/Batch+Processing).
+The batch job is divided in  Input, Process and On Complete stages.
+During the Input stage the Kick will go to the SalesForce Org A and query all the existing Contacts that match the filter criteria.
+During the Process stage, each SFDC Contact will be filtered depending on, if it has an existing matching contact in the SFDC Org B and if the last updated date of the later is greater than the one of SFDC Org A.
+The last step of the Process stage will group the contacts and create them in SFDC Org B.
+Finally during the On Complete stage the Kick will both otput statistics data into the console and send a notification email with the results of the batch excecution. 
 
 # Run it! <a name="runit"/>
 
@@ -54,7 +62,10 @@ In order to use this Mule Kick you need to configure properties (Credentials, co
 + sfdc.b.url `https://login.salesforce.com/services/Soap/u/26.0`
 
 
-
+#### EMail Details
++ mail.from=batch.contact.migration%40mulesoft.com
++ mail.to=damian.sima@mulesoft.com
++ mail.subject=Batch Job Finished Report
 
 # Customize It!<a name="customizeit"/>
 
@@ -88,25 +99,26 @@ This Kick has only an [HTTP Inbound Endpoint](http://www.mulesoft.org/documentat
 
 
 ## businessLogic.xml<a name="businesslogicxml"/>
-Functional aspect of the kick is implemented on this XML, directed by one flow responsible of conducting the generation of the report.
-The *mainFlow* organises the job in two different steps and finally sets the payload that will be the response for the HTTP Call.
+Functional aspect of the kick is implemented on this XML, directed by one flow responsible of excecuting the logic.
+For the pourpose of this particular Kick the *mainFlow* just excecutes the Batch Job which handles all the logic of it.
 This flow has Exception Strategy that basically consists on invoking the *defaultChoiseExceptionStrategy* defined in *errorHandling.xml* file.
-
-
-###  Gather Data Flow
-Mainly consisting of one call (Query) to bring all Contacts from SFDC Org A and setting the variable that would count the total of synced.
-
-###  Filter And Insert Data Flow
-The main component of this flow is a *For Each* processor that will try to either update or create a contact in the target SFDC org in bulks defined by the property `page.size`. Running this process in batch mode is key for performance, mainly to reduce the number of calls to SFDC API making use of their Batch API Methods.
-
-Before calling the *Bulk-Upsert* (Upsert since the action will be either an Update or a Insert) to SFDC Target company, Contacts will be filtered and the responsible for that will be the Sub Flow name *filterFlow*:
-+ A bulk (List) of Contacts will be received and for each one a *SFDCContactFilter* [Java Transformer](http://www.mulesoft.org/documentation/display/current/Java+Transformer+Reference) will determine (With a help of a [Filter Expression](http://www.mulesoft.org/documentation/display/current/Using+Filters) as the next processor) if the Contact has to be synced on not. If meets the requirements, it will be added to the list *filteredContactList* that will turn to be the payload at the end of the execution of this flow. 
-+ In this Kick a Contact to be synced will be filtered only if it exists already in target SFDC org and the data from Org A is older. In order to change this behaviour you just need to change logic on the *SFDCContactFilter* Java Transformer.
-
-The *filterFlow* as explained will return a list that will be filtered if it is empty, and if not, Bulk Sync method will take place. To check the results/status of this batch process you should go into SFDC UI to **Setup >  Monitoring > Bulk Data Load Jobs**.
 
 
 ## errorHandling.xml<a name="errorhandlingxml"/>
 Contains a [Catch Exception Strategy](http://www.mulesoft.org/documentation/display/current/Catch+Exception+Strategy) that is only Logging the exception thrown (If so). As you imagine, this is the right place to handle how your integration will react depending on the different exceptions. 
 
+# Testing the Kick <a name="testingthekick"/>
 
+You will notice that the Kick has been shipped with test.
+These devidi them self into two categories:
+
++ Unit Tests
++ Integration Tests
+
+You can run any of them by just doing right click on the class and clicking on run as Junit test.
+
+Do bear in mind that you'll have to tell the test classes which property file to use.
+For you convinience we have added a file mule.test.properties located in "src/test/resources".
+In the run configurations of the test just make sure to add the following property:
+
++ -Dmule.env=test
