@@ -14,27 +14,29 @@ http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smt
         </batch:input> 
         <batch:process-records>
             <batch:step name="getContactInB">
-                <enricher source="#[payload]" target="#[recordVars['recordInB']]" doc:name="Message Enricher">
+                <enricher source="#[payload]" target="#[recordVars['contactInB']]" doc:name="Message Enricher">
                     <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, LastModifiedDate FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="Check contact in org B"/>
                 </enricher>
             </batch:step>
-            <batch:step name="filterOldRecords" filter-expression="#[recordVars['concatInB'] is NullPayload]">
+            <batch:step name="filterOldRecords" filter-expression="#[recordVars['contactInB'] is NullPayload]">
                 <choice doc:name="Choice">
-                    <when expression="#[org.mule.kicks.util.ContactDateComparator.isAfter(payload, recordVars['recordInB'])]">
-                        <expression-component doc:name="Expression"><![CDATA[payload['Id'] = recordVars['contactInB']['Id']]]></expression-component>
+                    <when expression="#[org.mule.kicks.util.ContactDateComparator.isAfter(payload, recordVars['contactInB'])]">
+                        <expression-component doc:name="Expression"><![CDATA[payload['Id'] = recordVars['contactInB']['Id']
+
+]]></expression-component>
                     </when>
                     <otherwise>
-                        <set-payload doc:name="Set Payload" value="#[false]"/>
+                        <set-payload doc:name="Set Payload" value="#[return null]"/>
                     </otherwise>
                 </choice>
             </batch:step>
-            <batch:step name="createContactsInB" filter-expression="#[payload == false]">
-                <expression-component doc:name="Remove Fields"><![CDATA[#[payload.remove('type'); 
-payload.remove('LastModifiedDate')]]]></expression-component>
+            <batch:step name="createContactsInB" filter-expression="#[payload is NullPayload]">
+                <expression-component doc:name="Remove Fields"><![CDATA[payload.remove('type'); 
+payload.remove('LastModifiedDate');]]></expression-component>
                 <batch:commit size="200" doc:name="Batch Commit">
-					<sfdc:upsert-bulk config-ref="SalesforceB"  type="Contact" doc:name="Upsert contacts in org B" externalIdFieldName="Id">
-                		<sfdc:objects ref="#[payload]"/>
-					</sfdc:upsert-bulk>
+					<sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="Upsert contacts in org B" externalIdFieldName="Id">
+                        <sfdc:objects ref="#[payload]"/>
+					</sfdc:upsert>
                 </batch:commit>
             </batch:step>
         </batch:process-records>
@@ -51,4 +53,9 @@ payload.remove('LastModifiedDate')]]]></expression-component>
             </all>
         </batch:on-complete>
     </batch:job>
+    <flow name="mainFlow" doc:name="mainFlow" processingStrategy="synchronous">
+        <batch:execute name="migrateContactsBatch" doc:name="migrateContactsBatch"/>
+        <exception-strategy ref="defaultChoiceExceptionStrategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+    
 </mule>

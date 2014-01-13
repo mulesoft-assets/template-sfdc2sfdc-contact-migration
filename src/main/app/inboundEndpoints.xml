@@ -8,8 +8,8 @@ http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/jso
 
     <flow name="inboundFlow" doc:name="inboundFlow" processingStrategy="synchronous">
         <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="${http.port}" path="synccontacts" doc:name="Start Synchronization"/>
-        <batch:execute name="migrateContactsBatch" doc:name="migrateContactsBatch"/>
-        <set-payload value="&lt;h1&gt;Batch process initiated&lt;/h1&gt;&lt;b&gt;ID:&lt;/b&gt;#[payload.getId()]&lt;br/&gt;&lt;b&gt;Records to Be Processed: &lt;/b&gt;#[payload.getRecordCount()]&lt;br/&gt; &lt;b&gt;Status: &lt;/b&gt;#[payload.getStatus()]" doc:name="Set Payload"/>
+        <flow-ref name="mainFlow" doc:name="mainFlow"/>
+        <set-payload value="&lt;h1&gt;Batch Process initiated&lt;/h1&gt;&lt;b&gt;ID:&lt;/b&gt;#[payload.getId()]&lt;br/&gt;&lt;b&gt;Records to Be Processed: &lt;/b&gt;#[payload.getRecordCount()]&lt;br/&gt; &lt;b&gt;Start execution on: &lt;/b&gt;#[new java.util.Date()]" doc:name="Set Payload"/>
         <http:response-builder status="200" contentType="text/html" doc:name="HTTP Response Builder"/>
     </flow>
 </mule>
