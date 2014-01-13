@@ -49,7 +49,7 @@ public class BusinessLogicTestIT extends AbstractKickTestCase {
 	private static List<Map<String, String>> createdContacts = new ArrayList<Map<String, String>>();
 
 	protected class BatchWaitListener implements BatchNotificationListener {
-		@Override
+
 		public synchronized void onNotification(ServerNotification notification) {
 			final int action = notification.getAction();
 
