@@ -1,43 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-xsi:schemaLocation="http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+<mule xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
-    <flow name="mainFlow" doc:name="mainFlow" doc:description="Here you should place the main business logic.">
-        <flow-ref name="gatherDataFlow" doc:name="gatherDataFlow"/>
-        <flow-ref name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow"/> 
-        <logger message="Amount of contacts #[flowVars['contactCount']] - Contacts Filtered #[flowVars['filteredContactsCount']]" level="INFO" doc:name="Logger"/>
-        <set-payload value="Amount of contacts migrated #[flowVars['contactCount']] - Amount of contacts Filtered #[flowVars['filteredContactsCount']]" doc:name="Set Payload"/>
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd">
+	<flow name="mainFlow" doc:name="mainFlow" processingStrategy="synchronous">
+        <batch:execute name="migrateContactsBatch" doc:name="migrateContactsBatch"/>
         <exception-strategy ref="defaultChoiceExceptionStrategy" doc:name="Reference Exception Strategy"/>
     </flow>
-    <sub-flow name="gatherDataFlow" doc:name="gatherDataFlow">
-        <logger message="Gathering contact's data" level="INFO" doc:name="Logger"/>
-		<sfdc:query config-ref="SalesforceA" query="dsql:SELECT Department,Description,Email,FirstName,LastModifiedDate,LastName,MailingCity,MailingCountry,MobilePhone,Phone,Title FROM Contact WHERE (MailingCountry = 'USA' AND Email &lt;&gt; '') ORDER BY Email ASC" doc:name="Salesforce" fetchSize="${page.size}"/>
-        <set-variable variableName="contactCount" value="#[payload.size()]" doc:name="contactCount"/>
-	</sub-flow>
-    <sub-flow name="filterAndInsertDataFlow" doc:name="filterAndInsertDataFlow">
-        <logger message="Starting contacts creation" level="INFO" doc:name="Logger"/>
-        <set-variable variableName="filteredContactsCount" value="#[0]" doc:name="filteredContactsCount"/>
-        <foreach doc:name="For Each" batchSize="${page.size}">
-            <flow-ref name="filterFlow" doc:name="filterFlow"/>
-            <expression-filter expression="#[!payload.isEmpty()]" doc:name="Filter if Payload is empty"/>
-            <sfdc:upsert-bulk config-ref="SalesforceB"  type="Contact" doc:name="Upsert contacts in org B" externalIdFieldName="Id">
-                <sfdc:objects ref="#[payload]"/>
-            </sfdc:upsert-bulk>
-        </foreach>
-    </sub-flow>
-    <sub-flow name="filterFlow" doc:name="filterFlow">
-        <set-variable variableName="filteredContactList" value="#[new java.util.ArrayList()]" doc:name="filteredContactList"/>
-        <foreach doc:name="For Each">
-            <enricher source="#[payload]" target="#[flowVars['contactInB']]" doc:name="Store in variable contactInB">
-                <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, LastModifiedDate FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="Check contact in org B"/>
-            </enricher>
-            <custom-transformer class="org.mule.kicks.transformers.SFDCContactFilter" doc:name="SFDCContactFilter"/>
-            <expression-filter expression="#[!(payload is  NullPayload)]" doc:name="Filter if Payload is NullPayload"/>
-            <expression-component doc:name="Add Contact to filteredContactList"><![CDATA[#[flowVars['filteredContactList'].add(payload)]]]></expression-component>
-        </foreach>
-        <set-payload value="#[flowVars['filteredContactList']]" doc:name="Set filteredContactList as Payload"/>
-    </sub-flow>
+    <batch:job name="migrateContactsBatch">
+        <batch:threading-profile poolExhaustedAction="WAIT"/>
+        <batch:input>
+            <sfdc:query config-ref="SalesforceA" query="dsql:SELECT Department,Description,Email,FirstName,LastModifiedDate,LastName,MailingCity,MailingCountry,MobilePhone,Phone,Title FROM Contact WHERE (MailingCountry = 'USA' AND Email &lt;&gt; '') ORDER BY Email ASC" doc:name="Salesforce" fetchSize="${page.size}"/>
+        </batch:input> 
+        <batch:process-records>
+            <batch:step name="getContactInB">
+                <enricher source="#[payload]" target="#[recordVars['contactInB']]" doc:name="Message Enricher">
+                    <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, LastModifiedDate FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="Check contact in org B"/>
+                </enricher>
+            </batch:step>
+            <batch:step name="filterOldRecords" filter-expression="#[recordVars['contactInB'] is NullPayload]">
+                <choice doc:name="Choice">
+                    <when expression="#[org.mule.kicks.util.ContactDateComparator.isAfter(payload, recordVars['contactInB'])]">
+                        <expression-component doc:name="Expression"><![CDATA[payload['Id'] = recordVars['contactInB']['Id']
+
+]]></expression-component>
+                    </when>
+                    <otherwise>
+                        <set-payload doc:name="Set Payload" value="#[return null]"/>
+                    </otherwise>
+                </choice>
+            </batch:step>
+            <batch:step name="createContactsInB" filter-expression="#[payload is NullPayload]">
+                <expression-component doc:name="Remove Fields"><![CDATA[payload.remove('type'); 
+payload.remove('LastModifiedDate');]]></expression-component>
+                <batch:commit size="200" doc:name="Batch Commit">
+					<sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="Upsert contacts in org B" externalIdFieldName="Id">
+                        <sfdc:objects ref="#[payload]"/>
+					</sfdc:upsert>
+                </batch:commit>
+            </batch:step>
+        </batch:process-records>
+        <batch:on-complete>
+            <all doc:name="All">
+                <processor-chain>
+            		<json:object-to-json-transformer doc:name="Object to JSON"/>
+            		<logger message="Migration process has finished: #[payload]" level="INFO" doc:name="Logger"/>
+                </processor-chain>
+				<processor-chain>
+                	<json:object-to-json-transformer doc:name="Object to JSON"/>
+					<smtp:outbound-endpoint host="${smtp.host}" port="${smtp.port}" user="${smtp.user}" password="${smtp.password}" to="${mail.to}" from="${mail.from}" subject="${mail.subject}" responseTimeout="10000" connector-ref="gmailConnector" doc:name="Send mail"/>
+				</processor-chain>
+            </all>
+        </batch:on-complete>
+    </batch:job>
+    
+    
 </mule>
