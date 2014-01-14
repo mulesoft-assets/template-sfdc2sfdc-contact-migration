@@ -3,6 +3,7 @@
 + [Use Case](#usecase)
 + [Run it!](#runit)
     * [Running on CloudHub](#runoncloudhub)
+    	* [Deploying your Kick on CloudHub](#deployingyourkickoncloudhub)
     * [Running on premise](#runonopremise)
         * [Properties to be configured](#propertiestobeconfigured)
 + [Customize It!](#customizeit)
@@ -46,6 +47,10 @@ In any of the ways you would like to run this Kick this is an example of the out
 While [creating your application on CloudHub](http://www.mulesoft.org/documentation/display/current/Hello+World+on+CloudHub) (Or you can do it later as a next step), you need to go to Deployment > Advanced to set all environment variables detailed in **Properties to be configured** as well as the **mule.env**. 
 
 Once your app is all set and started, supposing you choose as domain name `sfdccontactsync` to trigger the use case you just need to hit `http://sfdccontactsync.cloudhub.io/synccontacts` and report will be sent to the emails configured.
+
+### Deploying your Kick on CloudHub <a name="deployingyourkickoncloudhub"/>
+Mule Studio provides you with really easy way to deploy your Kick directly to CloudHub, for the specific steps to do so please check this [link](http://www.mulesoft.org/documentation/display/current/Deploying+Mule+Applications#DeployingMuleApplications-DeploytoCloudHub)
+
 
 ## Running on premise <a name="runonopremise"/>
 Complete all properties in one of the property files, for example in [mule.prod.properties] (../blob/master/src/main/resources/mule.prod.properties) and run your app with the corresponding environment variable to use it. To follow the example, this will be `mule.env=prod`.
