@@ -39,7 +39,7 @@ import com.sforce.soap.partner.SaveResult;
  * @author damiansima
  */
 public class BusinessLogicTestIT extends AbstractKickTestCase {
-	protected static final int TIMEOUT = 40;
+	protected static final int TIMEOUT = 60;
 
 	private Prober prober;
 	protected Boolean failed;
