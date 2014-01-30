@@ -1,6 +1,7 @@
 package org.mule.kicks.integration;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -200,7 +201,7 @@ public class BusinessLogicTestIT extends AbstractKickTestCase {
 		Map<String, String> contact = new HashMap<String, String>();
 
 		contact.put("FirstName", "FirstName_" + sequence);
-		contact.put("LastName", "LastName_" + sequence);
+		contact.put("LastName", buildUniqueEmail("LastName_" + sequence));
 		contact.put("Email", "some.email." + sequence + "@fakemail.com");
 		contact.put("Description", "Some fake description");
 		contact.put("MailingCity", "Denver");
@@ -212,4 +213,23 @@ public class BusinessLogicTestIT extends AbstractKickTestCase {
 
 		return contact;
 	}
+	
+	private String buildUniqueEmail(String user) {
+		String server = "fakemail";
+		String kickName = "contactmigration";
+		String timeStamp = new Long(new Date().getTime()).toString();
+
+		StringBuilder builder = new StringBuilder();
+		builder.append(user);
+		builder.append(".");
+		builder.append(timeStamp);
+		builder.append("@");
+		builder.append(server);
+		builder.append(kickName);
+		builder.append(".com");
+
+		return builder.toString();
+
+	}
+
 }
