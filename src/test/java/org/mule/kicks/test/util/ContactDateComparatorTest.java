@@ -1,4 +1,4 @@
-package org.mule.kicks.util;
+package org.mule.kicks.test.util;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,6 +7,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 import org.mule.api.transformer.TransformerException;
+import org.mule.kicks.util.ContactDateComparator;
 
 public class ContactDateComparatorTest {
 	@Test(expected = IllegalArgumentException.class)
