@@ -10,6 +10,7 @@ import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mule.MessageExchangePattern;
 import org.mule.api.MuleEvent;
@@ -17,6 +18,7 @@ import org.mule.api.MuleException;
 import org.mule.api.context.notification.ServerNotification;
 import org.mule.construct.Flow;
 import org.mule.processor.chain.SubflowInterceptingChainLifecycleWrapper;
+import org.mule.tck.junit4.rule.DynamicPort;
 import org.mule.tck.probe.PollingProber;
 import org.mule.tck.probe.Probe;
 import org.mule.tck.probe.Prober;
@@ -63,6 +65,9 @@ public class BusinessLogicTestIT extends AbstractKickTestCase {
 			}
 		}
 	}
+	
+	@Rule
+	public DynamicPort port = new DynamicPort ("http.port");
 
 	@Before
 	public void setUp() throws Exception {
