@@ -2,7 +2,6 @@ package org.mule.kicks.integration;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +15,8 @@ import org.mule.MessageExchangePattern;
 import org.mule.api.MuleEvent;
 import org.mule.api.MuleException;
 import org.mule.construct.Flow;
-import org.mule.kicks.test.util.BatchTestHelper;
+import org.mule.kicks.builders.SfdcObjectBuilder;
+import org.mule.kicks.util.BatchTestHelper;
 import org.mule.processor.chain.SubflowInterceptingChainLifecycleWrapper;
 import org.mule.tck.junit4.rule.DynamicPort;
 import org.mule.transport.NullPayload;
@@ -33,8 +33,8 @@ import com.sforce.soap.partner.SaveResult;
  */
 public class BusinessLogicTestIT extends AbstractKickTestCase {
 	private static final int TIMEOUT_MILLIS = 60;
-	private static SubflowInterceptingChainLifecycleWrapper checkContactflow;
 
+	private static SubflowInterceptingChainLifecycleWrapper checkContactflow;
 	private static List<Map<String, String>> createdContacts = new ArrayList<Map<String, String>>();
 
 	private BatchTestHelper helper;
@@ -78,11 +78,11 @@ public class BusinessLogicTestIT extends AbstractKickTestCase {
 
 	@SuppressWarnings("unchecked")
 	private Map<String, String> invokeRetrieveContactFlow(SubflowInterceptingChainLifecycleWrapper flow, Map<String, String> contact) throws Exception {
-		Map<String, String> contactMap = new HashMap<String, String>();
-
-		contactMap.put("Email", contact.get("Email"));
-		contactMap.put("FirstName", contact.get("FirstName"));
-		contactMap.put("LastName", contact.get("LastName"));
+		Map<String, String> contactMap = SfdcObjectBuilder.aContact()
+															.with("Email", contact.get("Email"))
+															.with("FirstName", contact.get("FirstName"))
+															.with("LastName", contact.get("LastName"))
+															.build();
 
 		MuleEvent event = flow.process(getTestEvent(contactMap, MessageExchangePattern.REQUEST_RESPONSE));
 		Object payload = event.getMessage()
@@ -148,20 +148,19 @@ public class BusinessLogicTestIT extends AbstractKickTestCase {
 	}
 
 	private Map<String, String> createContact(String orgId, int sequence) {
-		Map<String, String> contact = new HashMap<String, String>();
+		return SfdcObjectBuilder.aContact()
+								.with("FirstName", "FirstName_" + sequence)
+								.with("LastName", buildUniqueEmail("LastName_" + sequence))
+								.with("Email", "some.email." + sequence + "@fakemail.com")
+								.with("Description", "Some fake description")
+								.with("MailingCity", "Denver")
+								.with("MailingCountry", "USA")
+								.with("MobilePhone", "123456789")
+								.with("Department", "department_" + sequence + "_" + orgId)
+								.with("Phone", "123456789")
+								.with("Title", "Dr")
+								.build();
 
-		contact.put("FirstName", "FirstName_" + sequence);
-		contact.put("LastName", buildUniqueEmail("LastName_" + sequence));
-		contact.put("Email", "some.email." + sequence + "@fakemail.com");
-		contact.put("Description", "Some fake description");
-		contact.put("MailingCity", "Denver");
-		contact.put("MailingCountry", "USA");
-		contact.put("MobilePhone", "123456789");
-		contact.put("Department", "department_" + sequence + "_" + orgId);
-		contact.put("Phone", "123456789");
-		contact.put("Title", "Dr");
-
-		return contact;
 	}
 
 	private String buildUniqueEmail(String user) {

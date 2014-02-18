@@ -1,4 +1,4 @@
-package org.mule.kicks.test.util;
+package org.mule.kicks.util;
 
 import java.util.HashMap;
 import java.util.Map;

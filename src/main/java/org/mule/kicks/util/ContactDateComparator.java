@@ -8,12 +8,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 /**
- * The function of this class is to establish a relation happens before between
- * two maps representing SFDC contacts.
+ * The function of this class is to establish a relation happens before between two maps representing SFDC contacts.
  * 
- * It's assumed that these maps are well formed maps from SFDC thus they both
- * contain an entry with the expected key. Never the less validations are being
- * done.
+ * It's assumed that these maps are well formed maps from SFDC thus they both contain an entry with the expected key. Never the less validations are being done.
  * 
  * @author damiansima
  */
@@ -27,8 +24,7 @@ public class ContactDateComparator {
 	 *            SFDC contact map
 	 * @param contactB
 	 *            SFDC contact map
-	 * @return true if the last modified date from contactA is after the one
-	 *         from contact B
+	 * @return true if the last modified date from contactA is after the one from contact B
 	 */
 	public static boolean isAfter(Map<String, String> contactA, Map<String, String> contactB) {
 		Validate.notNull(contactA, "The contact A should not be null");

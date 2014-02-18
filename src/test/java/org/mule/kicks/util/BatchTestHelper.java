@@ -1,4 +1,4 @@
-package org.mule.kicks.test.util;
+package org.mule.kicks.util;
 
 import static junit.framework.Assert.assertTrue;
 
@@ -50,11 +50,11 @@ public class BatchTestHelper {
 	public void assertJobWasSuccessful() {
 		assertTrue("Batch job was not successful", wasJobSuccessful());
 	}
-	
+
 	/*
-	 * Helper Classes 
+	 * Helper Classes
 	 */
-	
+
 	protected class BatchWaitListener implements BatchNotificationListener {
 
 		public synchronized void onNotification(ServerNotification notification) {
