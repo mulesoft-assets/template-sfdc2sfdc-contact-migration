@@ -22,6 +22,7 @@ import org.mule.transport.NullPayload;
 
 import com.mulesoft.module.batch.BatchTestHelper;
 import com.sforce.soap.partner.SaveResult;
+import org.mule.templates.integration.AbstractTemplateTestCase;
 
 /**
  * The objective of this class is to validate the correct behavior of the Mule Kick that make calls to external systems.

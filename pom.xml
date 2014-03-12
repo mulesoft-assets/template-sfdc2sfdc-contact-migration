@@ -7,7 +7,7 @@
 	<artifactId>sfdc2sfdc-contact-migration</artifactId>
 	<packaging>mule</packaging>
 	<version>1.0.0-SNAPSHOT</version>
-	<name>sfdc2sfdc-contactsync Mule Kick Project</name>
+	<name>sfdc2sfdc-contact-migration Mule Anypoint TemplateProject</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -487,6 +487,12 @@
 			<version>${mule.version}</version>
 			<scope>test</scope>
 			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>com.mulesoft.muleesb.modules</groupId>
+			<artifactId>mule-module-batch-ee</artifactId>
+			<version>${mule.version}</version>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- Munit -->
