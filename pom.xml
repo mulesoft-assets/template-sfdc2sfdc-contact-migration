@@ -13,14 +13,15 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<mule.version>3.5.0-cascade</mule.version>
+		<mule.version>3.5.0-M4</mule.version>
+		<munit.version>3.5-M1</munit.version>
+		<junit.version>4.9</junit.version>
+
 		<sfdc.version>5.4.3</sfdc.version>
 
-		<eclipsePluginVersion>2.8</eclipsePluginVersion>
 		<jdkName>JavaSE-1.6</jdkName>
 		<jdk.version>1.6</jdk.version>
-		<junit.version>4.9</junit.version>
-		<munit.version>3.4-M4-SNAPSHOT</munit.version>
+		<eclipsePluginVersion>2.8</eclipsePluginVersion>
 	</properties>
 
 	<build>
@@ -451,6 +452,18 @@
 
 		<!-- for testing -->
 		<dependency>
+			<groupId>mockobjects</groupId>
+			<artifactId>mockobjects-core</artifactId>
+			<version>0.09</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.mule.tests</groupId>
 			<artifactId>mule-tests-functional</artifactId>
 			<version>${mule.version}</version>
@@ -469,17 +482,13 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>mockobjects</groupId>
-			<artifactId>mockobjects-core</artifactId>
-			<version>0.09</version>
+			<groupId>com.mulesoft.muleesb.modules</groupId>
+			<artifactId>mule-module-batch-ee</artifactId>
+			<version>${mule.version}</version>
 			<scope>test</scope>
+			<type>test-jar</type>
 		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
+
 		<!-- Munit -->
 		<dependency>
 			<groupId>org.mule.munit</groupId>
@@ -488,9 +497,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.mulesoft.muleesb.modules</groupId>
-			<artifactId>mule-module-batch-ee</artifactId>
-			<version>${mule.version}</version>
+			<groupId>org.mule.munit</groupId>
+			<artifactId>munit-assert</artifactId>
+			<version>${munit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

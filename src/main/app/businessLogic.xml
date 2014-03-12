@@ -46,7 +46,7 @@ payload['Account'].put('NumberOfEmployees', Integer.parseInt(payload['Account'][
                 </choice>
             </batch:step>
             <batch:step name="setDummyAccountIdStep" filter-expression="! ('assignDummyAccount'=='${account.sync.policy}')">
-                <batch:set-record-variable variableName="idOfAccountInB" value="${account.id.in.b}" doc:name="idOfAccountInB"/>
+                <batch:set-record-variable variableName="idOfAccountInB" value="${account.id.in.b}" doc:name="set idOfAccountInB"/>
             </batch:step>
             <batch:step name="selectNewerContactStep" filter-expression="#[recordVars['contactInB'] is NullPayload]">
                 <choice doc:name="Choice">
@@ -70,7 +70,6 @@ payload.put('AccountId', recordVars['idOfAccountInB']);
 					<sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="upsert contacts in org B" externalIdFieldName="Id">
                         <sfdc:objects ref="#[payload]"/>
 					</sfdc:upsert>
-                    <logger level="INFO" doc:name="Logger"/>
                 </batch:commit>
             </batch:step>
         </batch:process-records>
@@ -79,6 +78,7 @@ payload.put('AccountId', recordVars['idOfAccountInB']);
                 <processor-chain>
             		<json:object-to-json-transformer doc:name="transform BatchJobInstance to JSON"/>
             		<logger message="Migration process has finished: #[payload]" level="INFO" doc:name="log 'Migration process has finished'"/>
+						<logger message="Migration process has finished:" level="INFO" doc:name="log 'Migration process has finished'"/>
                 </processor-chain>
 				<processor-chain>
                 	<json:object-to-json-transformer doc:name="transform BatchJobInstance to JSON"/>

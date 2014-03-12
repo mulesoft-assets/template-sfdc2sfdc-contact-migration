@@ -1,24 +1,24 @@
-package org.mule.kicks.builders;
+package org.mule.templates.builders;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class SfdcObjectBuilder {
 
-	private Map<String, String> fields;
+	private Map<String, Object> fields;
 
 	public SfdcObjectBuilder() {
-		this.fields = new HashMap<String, String>();
+		this.fields = new HashMap<String, Object>();
 	}
 
-	public SfdcObjectBuilder with(String field, String value) {
+	public SfdcObjectBuilder with(String field, Object value) {
 		SfdcObjectBuilder copy = new SfdcObjectBuilder();
 		copy.fields.putAll(this.fields);
 		copy.fields.put(field, value);
 		return copy;
 	}
 
-	public Map<String, String> build() {
+	public Map<String, Object> build() {
 		return fields;
 	}
 
