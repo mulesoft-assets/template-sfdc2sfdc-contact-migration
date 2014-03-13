@@ -50,7 +50,7 @@ payload['Account'].put('NumberOfEmployees', Integer.parseInt(payload['Account'][
             </batch:step>
             <batch:step name="selectNewerContactStep" filter-expression="#[recordVars['contactInB'] is NullPayload]">
                 <choice doc:name="Choice">
-                    <when expression="#[org.mule.kicks.util.ContactDateComparator.isAfter(payload, recordVars['contactInB'])]">
+                    <when expression="#[org.mule.templates.util.ContactDateComparator.isAfter(payload, recordVars['contactInB'])]">
                         <expression-component doc:name="define Id in SalesForce Intance B"><![CDATA[payload['Id'] = recordVars['contactInB']['Id']
 
 ]]></expression-component>

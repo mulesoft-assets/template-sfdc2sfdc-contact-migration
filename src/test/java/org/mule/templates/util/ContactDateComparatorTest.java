@@ -7,7 +7,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 import org.mule.api.transformer.TransformerException;
-import org.mule.kicks.util.ContactDateComparator;
+import org.mule.templates.util.ContactDateComparator;
 
 public class ContactDateComparatorTest {
 	@Test(expected = IllegalArgumentException.class)
