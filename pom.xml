@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.mule.kicks</groupId>
+	<groupId>org.mule.templates</groupId>
 	<artifactId>sfdc2sfdc-contact-migration</artifactId>
 	<packaging>mule</packaging>
 	<version>1.0.0-SNAPSHOT</version>
@@ -486,13 +486,13 @@
 			<artifactId>mule-module-batch-ee</artifactId>
 			<version>${mule.version}</version>
 			<scope>test</scope>
-			<type>test-jar</type>
 		</dependency>
 		<dependency>
 			<groupId>com.mulesoft.muleesb.modules</groupId>
 			<artifactId>mule-module-batch-ee</artifactId>
 			<version>${mule.version}</version>
 			<scope>test</scope>
+			<type>test-jar</type>
 		</dependency>
 
 		<!-- Munit -->

@@ -1,9 +1,9 @@
-# Mule Kick: SFDC to SFDC Contacts Sync
+# Anypoint Template: SFDC to SFDC Contacts Sync
 
 + [Use Case](#usecase)
 + [Run it!](#runit)
     * [Running on CloudHub](#runoncloudhub)
-    	* [Deploying your Kick on CloudHub](#deployingyourkickoncloudhub)
+    	* [Deploying your Anypoint Template on CloudHub](#deployingyouranypointtemplateoncloudhub)
     * [Running on premise](#runonopremise)
         * [Properties to be configured](#propertiestobeconfigured)
 + [Customize It!](#customizeit)
@@ -11,7 +11,7 @@
     * [endpoints.xml](#endpointsxml)
     * [businessLogic.xml](#businesslogicxml)
     * [errorHandling.xml](#errorhandlingxml)
-+ [Testing the Kick](#testingthekick)
++ [Testing the Anypoint Template](#testingtheanypointtemplate)
 
    
 
@@ -19,20 +19,21 @@
 # Use Case <a name="usecase"/>
 As a Salesforce admin I want to syncronize contacts between two Salesfoce orgs.
 
-This Kick (template) should serve as a foundation for the process of migrating contacts from one Salesfoce instance to another, being able to specify filtering criterias and desired behaviour when a contact already exists in the destination org. 
+This Anypoint Template should serve as a foundation for the process of migrating contacts from one Salesfoce instance to another, being able to specify filtering criterias and desired behaviour when a contact already exists in the destination org. 
 
-As implemented, this Kick leverage the [Batch Module](http://www.mulesoft.org/documentation/display/current/Batch+Processing).
+As implemented, this Anypoint Template leverage the [Batch Module](http://www.mulesoft.org/documentation/display/current/Batch+Processing).
 The batch job is divided in  Input, Process and On Complete stages.
-During the Input stage the Kick will go to the SalesForce Org A and query all the existing Contacts that match the filter criteria.
+During the Input stage the Anypoint Template will go to the SalesForce Org A and query all the existing Contacts that match the filter criteria.
 During the Process stage, each SFDC Contact will be filtered depending on, if it has an existing matching contact in the SFDC Org B and if the last updated date of the later is greater than the one of SFDC Org A.
 The last step of the Process stage will group the contacts and create them in SFDC Org B.
-Finally during the On Complete stage the Kick will both otput statistics data into the console and send a notification email with the results of the batch excecution. 
+Finally during the On Complete stage the Anypoint Template will both otput statistics data into the console and send a notification email with the results of the batch excecution.
+In any event the Anypoint Template can be configure to also move over the Account to which the Contact is related. The application can either, create the Account if it doesn't exitis, assing the Contact to a pre existing Account in Salesforce instance B, or do nothing in what regards to the Account. 
 
 # Run it! <a name="runit"/>
 
 Simple steps to get SFDC to SFDC Contacts Sync running.
 
-In any of the ways you would like to run this Kick this is an example of the output you'll see after hitting the HTTP endpoint:
+In any of the ways you would like to run this Anypoint Template, here is an example of the output you'll see after hitting the HTTP endpoint:
 
 <pre>
 <h1>Batch Process initiated</h1>
@@ -48,8 +49,9 @@ While [creating your application on CloudHub](http://www.mulesoft.org/documentat
 
 Once your app is all set and started, supposing you choose as domain name `sfdccontactsync` to trigger the use case you just need to hit `http://sfdccontactsync.cloudhub.io/synccontacts` and report will be sent to the emails configured.
 
-### Deploying your Kick on CloudHub <a name="deployingyourkickoncloudhub"/>
-Mule Studio provides you with really easy way to deploy your Kick directly to CloudHub, for the specific steps to do so please check this [link](http://www.mulesoft.org/documentation/display/current/Deploying+Mule+Applications#DeployingMuleApplications-DeploytoCloudHub)
+### Deploying your Anypoint Template on CloudHub <a name="deployingyouranypointtemplateoncloudhub"/>
+ 	
+Mule Studio provides you with really easy way to deploy your Anypoint Template directly to CloudHub, for the specific steps to do so please check this [link](http://www.mulesoft.org/documentation/display/current/Deploying+Mule+Applications#DeployingMuleApplications-DeploytoCloudHub)
 
 
 ## Running on premise <a name="runonopremise"/>
@@ -61,10 +63,20 @@ After this, to trigger the use case you just need to hit the local http endpoint
 
 ## Properties to be configured (With examples)<a name="propertiestobeconfigured"/>
 
-In order to use this Mule Kick you need to configure properties (Credentials, configurations, etc.) either in properties file or in CloudHub as Environment Variables. Detail list with examples:
+In order to use this Anypoint Template you need to configure properties (Credentials, configurations, etc.) either in properties file or in CloudHub as Environment Variables. Detail list with examples:
 
 ### Application configuration
 + http.port `9090` 
++ account.sync.policy `syncAccount`
++ account.id.in.b `001n0000003fMWXAA2`
+
+**Note:** the property **account.sync.policy** can take any of the three following values: 
+
++ **empty_value**: if the propety has no value assigned to it then application will do nothing in what respect to the account and it'll just move the contact over.
++ **syncAccount**: it will try to create the contact's account should this is not pressent in the Salesforce instance B.
++ **assignDummyAccount**: it will assign the cotact to an pre existing account in Salesforce instance B. For this it will use the value of  `account.id.in.b`. 
+
+
 
 #### SalesForce Connector configuration for company A
 + sfdc.a.username `bob.dylan@orga`
@@ -86,8 +98,8 @@ In order to use this Mule Kick you need to configure properties (Credentials, co
 
 # Customize It!<a name="customizeit"/>
 
-This brief guide intends to give a high level idea of how this Kick is built and how you can change it according to your needs.
-As mule applications are based on XML files, this page will be organised by describing all the XML that conform the Kick.
+This brief guide intends to give a high level idea of how this Anypoint Template is built and how you can change it according to your needs.
+As mule applications are based on XML files, this page will be organised by describing all the XML that conform the Anypoint Template.
 Of course more files will be found such as Test Classes and [Mule Application Files](http://www.mulesoft.org/documentation/display/current/Application+Format), but to keep it simple we will focus on the XMLs.
 
 Here is a list of the main XML files you'll find in this application:
@@ -105,7 +117,7 @@ In the visual editor they can be found on the *Global Element* tab.
 
 ## endpoints.xml<a name="endpointsxml"/>
 This is the file where you will found the inbound and outbound sides of your integration app.
-This Kick has only an [HTTP Inbound Endpoint](http://www.mulesoft.org/documentation/display/current/HTTP+Endpoint+Reference) as the way to trigger the use case.
+This Anypoint Template has only an [HTTP Inbound Endpoint](http://www.mulesoft.org/documentation/display/current/HTTP+Endpoint+Reference) as the way to trigger the use case.
 
 ###  Inbound Flow
 **HTTP Inbound Endpoint** - Start Report Generation
@@ -116,18 +128,18 @@ This Kick has only an [HTTP Inbound Endpoint](http://www.mulesoft.org/documentat
 
 
 ## businessLogic.xml<a name="businesslogicxml"/>
-Functional aspect of the kick is implemented on this XML, directed by one flow responsible of excecuting the logic.
-For the pourpose of this particular Kick the *mainFlow* just excecutes the Batch Job which handles all the logic of it.
+Functional aspect of the Anypoint Template is implemented on this XML, directed by one flow responsible of excecuting the logic.
+For the pourpose of this particular Anypoint Template the *mainFlow* just excecutes the Batch Job which handles all the logic of it.
 This flow has Exception Strategy that basically consists on invoking the *defaultChoiseExceptionStrategy* defined in *errorHandling.xml* file.
 
 
 ## errorHandling.xml<a name="errorhandlingxml"/>
 Contains a [Catch Exception Strategy](http://www.mulesoft.org/documentation/display/current/Catch+Exception+Strategy) that is only Logging the exception thrown (If so). As you imagine, this is the right place to handle how your integration will react depending on the different exceptions. 
 
-# Testing the Kick <a name="testingthekick"/>
+# Testing the Anypoint Template <a name="testingtheanypointtemplate"/>
 
-You will notice that the Kick has been shipped with test.
-These devidi them self into two categories:
+You will notice that the Anypoint Template has been shipped with tests.
+These divide them self into two categories:
 
 + Unit Tests
 + Integration Tests
