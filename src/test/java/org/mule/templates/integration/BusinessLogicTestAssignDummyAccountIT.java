@@ -3,7 +3,6 @@ package org.mule.templates.integration;
 import static org.mule.templates.builders.SfdcObjectBuilder.anAccount;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,11 +17,9 @@ import org.mule.MessageExchangePattern;
 import org.mule.api.MuleEvent;
 import org.mule.api.MuleException;
 import org.mule.processor.chain.SubflowInterceptingChainLifecycleWrapper;
-import org.mule.transport.NullPayload;
 
-import com.mulesoft.module.batch.BatchTestHelper;
 import com.sforce.soap.partner.SaveResult;
-import org.mule.templates.integration.AbstractTemplateTestCase;
+import com.mulesoft.module.batch.BatchTestHelper;
 
 /**
  * The objective of this class is to validate the correct behavior of the Mule Kick that make calls to external systems.
@@ -36,6 +33,7 @@ import org.mule.templates.integration.AbstractTemplateTestCase;
  * @author damiansima
  */
 public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplateTestCase {
+	private static final String ACCOUNT_ID_IN_B = "001n0000003gwUyAAI";
 	private BatchTestHelper helper;
 
 	private List<Map<String, Object>> createdContacts = new ArrayList<Map<String, Object>>();
@@ -44,7 +42,8 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplateTestC
 	@BeforeClass
 	public static void init() {
 		System.setProperty("account.sync.policy", "assignDummyAccount");
-		System.setProperty("account.id.in.b", "001n0000003fMWXAA2");
+		System.setProperty("account.id.in.b", ACCOUNT_ID_IN_B);
+
 	}
 
 	@AfterClass
@@ -87,26 +86,10 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplateTestC
 		Map<String, Object> contacPayload = invokeRetrieveFlow(checkContactflow, createdContacts.get(2));
 		Assert.assertEquals("The contact should have been sync", createdContacts.get(2)
 																				.get("Email"), contacPayload.get("Email"));
-		Assert.assertEquals("The contact should belong to a different account ", "001n0000003fMWXAA2", contacPayload.get("AccountId"));
+		Assert.assertEquals("The contact should belong to a different account ", ACCOUNT_ID_IN_B, contacPayload.get("AccountId"));
 
 		Map<String, Object> accountPayload = invokeRetrieveFlow(checkAccountflow, createdAccounts.get(0));
 		Assert.assertNull("The Account shouldn't have been sync.", accountPayload);
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map<String, Object> invokeRetrieveAccountFlow(SubflowInterceptingChainLifecycleWrapper flow, Map<String, Object> account) throws Exception {
-		Map<String, Object> accountMap = new HashMap<String, Object>();
-
-		accountMap.put("Name", account.get("Name"));
-
-		MuleEvent event = flow.process(getTestEvent(accountMap, MessageExchangePattern.REQUEST_RESPONSE));
-		Object payload = event.getMessage()
-								.getPayload();
-		if (payload instanceof NullPayload) {
-			return null;
-		} else {
-			return (Map<String, Object>) payload;
-		}
 	}
 
 	private void createTestDataInSandBox() throws MuleException, Exception {

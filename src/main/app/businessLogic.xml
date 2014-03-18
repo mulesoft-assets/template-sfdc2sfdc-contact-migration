@@ -15,7 +15,6 @@ http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schem
         </batch:input> 
         <batch:process-records>
             <batch:step name="getContactInBStep">
-                <set-variable variableName="idOfAccountInB" value="''" doc:name="idOfAccountInB"/>
                 <enricher source="#[payload]" target="#[recordVars['contactInB']]" doc:name="store result in record var 'contactInB'">
                     <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, LastModifiedDate FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="query contact in Salesforce instance B"/>
                 </enricher>
@@ -44,9 +43,11 @@ payload['Account'].put('NumberOfEmployees', Integer.parseInt(payload['Account'][
                         </enricher>
                     </otherwise>
                 </choice>
+                <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= recordVars['idOfAccountInB'];
+]]></expression-component>
             </batch:step>
             <batch:step name="setDummyAccountIdStep" filter-expression="! ('assignDummyAccount'=='${account.sync.policy}')">
-                <batch:set-record-variable variableName="idOfAccountInB" value="${account.id.in.b}" doc:name="set idOfAccountInB"/>
+                <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= '${account.id.in.b}';]]></expression-component>
             </batch:step>
             <batch:step name="selectNewerContactStep" filter-expression="#[recordVars['contactInB'] is NullPayload]">
                 <choice doc:name="Choice">
@@ -63,13 +64,14 @@ payload['Account'].put('NumberOfEmployees', Integer.parseInt(payload['Account'][
             <batch:step name="createContactsInBStep" filter-expression="#[payload is NullPayload]">
                 <expression-component doc:name="remove Fields type and LastModifiedDate"><![CDATA[payload.remove('type'); 
 payload.remove('LastModifiedDate');
-payload.remove('Account');
-payload.put('AccountId', recordVars['idOfAccountInB']);
-]]></expression-component>
+payload.remove('Account');]]></expression-component>
+                <logger level="INFO" doc:name="Logger"/>
+            	
                 <batch:commit size="200" doc:name="Batch Commit">
 					<sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="upsert contacts in org B" externalIdFieldName="Id">
                         <sfdc:objects ref="#[payload]"/>
 					</sfdc:upsert>
+                    <logger level="INFO" doc:name="Logger"/>
                 </batch:commit>
             </batch:step>
         </batch:process-records>
