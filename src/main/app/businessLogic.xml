@@ -65,13 +65,11 @@ payload['Account'].put('NumberOfEmployees', Integer.parseInt(payload['Account'][
                 <expression-component doc:name="remove Fields type and LastModifiedDate"><![CDATA[payload.remove('type'); 
 payload.remove('LastModifiedDate');
 payload.remove('Account');]]></expression-component>
-                <logger level="INFO" doc:name="Logger"/>
             	
                 <batch:commit size="200" doc:name="Batch Commit">
 					<sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="upsert contacts in org B" externalIdFieldName="Id">
                         <sfdc:objects ref="#[payload]"/>
 					</sfdc:upsert>
-                    <logger level="INFO" doc:name="Logger"/>
                 </batch:commit>
             </batch:step>
         </batch:process-records>
