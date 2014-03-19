@@ -20,7 +20,7 @@ import com.mulesoft.module.batch.BatchTestHelper;
 import com.sforce.soap.partner.SaveResult;
 
 /**
- * The objective of this class is to validate the correct behavior of the Mule Kick that make calls to external systems.
+ * The objective of this class is to validate the correct behavior of the Mule Template that make calls to external systems.
  * 
  * The test will invoke the batch process and afterwards check that the contacts had been correctly created and that the ones that should be filtered are not in
  * the destination sand box.

@@ -87,9 +87,9 @@ payload.remove('Account');]]></expression-component>
             </all>
         </batch:on-complete>
     </batch:job>
-    <flow name="mainFlow" doc:name="mainFlow" processingStrategy="synchronous" doc:description="This flow is the entry point to the Kick business logic.
+    <flow name="mainFlow" doc:name="mainFlow" processingStrategy="synchronous" doc:description="This flow is the entry point to the Anypoint Template  business logic.
 
-This flow should control the direction of the application, and it should be called by the different endpoints that your Kick exposes to trigger it.
+This flow should control the direction of the application, and it should be called by the different endpoints that your Anypoint Template  exposes to trigger it.
 
 ">
         <batch:execute name="migrateContactsBatch" doc:name="trigger migrateContactsBatch"/>
