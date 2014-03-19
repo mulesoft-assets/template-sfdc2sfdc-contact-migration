@@ -1,4 +1,4 @@
-# Anypoint Template: SFDC to SFDC Contacts Sync
+# Anypoint Template: SFDC to SFDC Contacts Migration
 
 + [Use Case](#usecase)
 + [Run it!](#runit)
@@ -31,7 +31,7 @@ In any event the Anypoint Template can be configure to also move over the Accoun
 
 # Run it! <a name="runit"/>
 
-Simple steps to get SFDC to SFDC Contacts Sync running.
+Simple steps to get SFDC to SFDC Contact Migration running.
 
 In any of the ways you would like to run this Anypoint Template, here is an example of the output you'll see after hitting the HTTP endpoint:
 
@@ -124,7 +124,7 @@ This Anypoint Template has only an [HTTP Inbound Endpoint](http://www.mulesoft.o
 + `${http.port}` is set as a property to be defined either on a property file or in CloudHub environment variables.
 + The path configured by default is `synccontacts` and you are free to change for the one you prefer.
 + The host name for all endpoints in your CloudHub configuration should be defined as `localhost`. CloudHub will then route requests from your application domain URL to the endpoint.
-+ The endpoint is configured as a *request-response* since as a result of calling it the response will be the total of Contacts synced and filtered by the criteria specified.
++ The endpoint is configured as a *request-response* since as a result of calling it the response will be the total of Contacts migrated and filtered by the criteria specified.
 
 
 ## businessLogic.xml<a name="businesslogicxml"/>
