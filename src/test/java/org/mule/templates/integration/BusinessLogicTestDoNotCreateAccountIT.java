@@ -1,5 +1,7 @@
 package org.mule.templates.integration;
 
+import static junit.framework.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +33,8 @@ import com.sforce.soap.partner.SaveResult;
  */
 public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplateTestCase {
 
-	private List<Map<String, Object>> createdContacts = new ArrayList<Map<String, Object>>();
-	private List<Map<String, Object>> createdAccounts = new ArrayList<Map<String, Object>>();
+	private List<Map<String, Object>> createdContactsInA = new ArrayList<Map<String, Object>>();
+	private List<Map<String, Object>> createdAccountsInB = new ArrayList<Map<String, Object>>();
 
 	private BatchTestHelper helper;
 
@@ -53,8 +55,12 @@ public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplateTestC
 
 		helper = new BatchTestHelper(muleContext);
 
-		checkContactflow = getSubFlow("retrieveContactFlow");
-		checkContactflow.initialise();
+		// Flow to retrieve contacts from target system after sync in g
+		retrieveContactFromBFlow = getSubFlow("retrieveContactFromBFlow");
+		retrieveContactFromBFlow.initialise();
+
+		retrieveAccountFlowFromB = getSubFlow("retrieveAccountFlowFromB");
+		retrieveAccountFlowFromB.initialise();
 
 		createTestDataInSandBox();
 	}
@@ -72,47 +78,73 @@ public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplateTestC
 		helper.awaitJobTermination(TIMEOUT_SEC * 1000, 500);
 		helper.assertJobWasSuccessful();
 
-		Assert.assertEquals("The contact should not have been sync", null, invokeRetrieveFlow(checkContactflow, createdContacts.get(0)));
+		Assert.assertEquals("The contact should not have been sync", null, invokeRetrieveFlow(retrieveContactFromBFlow, createdContactsInA.get(0)));
 
-		Assert.assertEquals("The contact should not have been sync", null, invokeRetrieveFlow(checkContactflow, createdContacts.get(1)));
+		Assert.assertEquals("The contact should not have been sync", null, invokeRetrieveFlow(retrieveContactFromBFlow, createdContactsInA.get(1)));
 
-		Map<String, Object> payload = invokeRetrieveFlow(checkContactflow, createdContacts.get(2));
-		Assert.assertEquals("The contact should have been sync", createdContacts.get(2)
-																				.get("Email"), payload.get("Email"));
+		Map<String, Object> payload = invokeRetrieveFlow(retrieveContactFromBFlow, createdContactsInA.get(2));
+		Assert.assertEquals("The contact should have been sync", createdContactsInA.get(2)
+																					.get("Email"), payload.get("Email"));
+
+		Map<String, Object> fourthContact = createdContactsInA.get(3);
+		payload = invokeRetrieveFlow(retrieveContactFromBFlow, fourthContact);
+		assertEquals("The contact should have been sync (Email)", fourthContact.get("Email"), payload.get("Email"));
+		assertEquals("The contact should have been sync (FirstName)", fourthContact.get("FirstName"), payload.get("FirstName"));
 	}
 
 	@SuppressWarnings("unchecked")
 	private void createTestDataInSandBox() throws MuleException, Exception {
-		SubflowInterceptingChainLifecycleWrapper flow = getSubFlow("createContactFlow");
-		flow.initialise();
+		// Create object in target system to be updated
+		Map<String, Object> contact_3_B = createContact("B", 3);
+		contact_3_B.put("MailingCountry", "United States");
+		List<Map<String, Object>> createdContactInB = new ArrayList<Map<String, Object>>();
+		createdContactInB.add(contact_3_B);
+
+		SubflowInterceptingChainLifecycleWrapper createContactInBFlow = getSubFlow("createContactFlowB");
+		createContactInBFlow.initialise();
+		createContactInBFlow.process(getTestEvent(createdContactInB, MessageExchangePattern.REQUEST_RESPONSE));
+
+		// Create contacts in source system to be or not to be synced
 
 		// This contact should not be sync
-		Map<String, Object> contact = createContact("A", 0);
-		contact.put("Email", "");
-		createdContacts.add(contact);
+		Map<String, Object> contact_0_A = createContact("A", 0);
+		contact_0_A.put("MailingCountry", "Argentina");
 
 		// This contact should not be sync
-		contact = createContact("A", 1);
-		contact.put("MailingCountry", "ARG");
-		createdContacts.add(contact);
+		Map<String, Object> contact_1_A = createContact("A", 1);
+		contact_1_A.put("MailingCountry", "Argentina");
 
 		// This contact should BE sync
-		contact = createContact("A", 2);
-		createdContacts.add(contact);
+		Map<String, Object> contact_2_A = createContact("A", 2);
 
-		MuleEvent event = flow.process(getTestEvent(createdContacts, MessageExchangePattern.REQUEST_RESPONSE));
+		// This contact should BE sync (updated)
+		Map<String, Object> contact_3_A = createContact("A", 3);
+		contact_3_A.put("Email", contact_3_B.get("Email"));
+
+		createdContactsInA.add(contact_0_A);
+		createdContactsInA.add(contact_1_A);
+		createdContactsInA.add(contact_2_A);
+		createdContactsInA.add(contact_3_A);
+
+		SubflowInterceptingChainLifecycleWrapper createContactInAFlow = getSubFlow("createContactFlowA");
+		createContactInAFlow.initialise();
+
+		MuleEvent event = createContactInAFlow.process(getTestEvent(createdContactsInA, MessageExchangePattern.REQUEST_RESPONSE));
+
 		List<SaveResult> results = (List<SaveResult>) event.getMessage()
 															.getPayload();
+		System.out.println("Results from creation in A" + results.toString());
 		for (int i = 0; i < results.size(); i++) {
-			createdContacts.get(i)
-							.put("Id", results.get(i)
-												.getId());
+			createdContactsInA.get(i)
+								.put("Id", results.get(i)
+													.getId());
 		}
+		System.out.println("Results after adding" + createdContactsInA.toString());
 	}
 
 	private void deleteTestDataFromSandBox() throws MuleException, Exception {
-		deleteTestContactFromSandBox(createdContacts);
-		deleteTestAccountFromSandBox(createdAccounts);
+		deleteTestContactFromSandBox(createdContactsInA);
+		deleteTestAccountFromSandBox(createdAccountsInB);
 	}
 
 }

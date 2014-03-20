@@ -11,7 +11,9 @@ import java.util.Properties;
 import org.junit.Rule;
 import org.mule.MessageExchangePattern;
 import org.mule.api.MuleEvent;
+import org.mule.api.MuleException;
 import org.mule.api.config.MuleProperties;
+import org.mule.api.lifecycle.InitialisationException;
 import org.mule.processor.chain.SubflowInterceptingChainLifecycleWrapper;
 import org.mule.tck.junit4.FunctionalTestCase;
 import org.mule.tck.junit4.rule.DynamicPort;
@@ -32,8 +34,8 @@ public class AbstractTemplateTestCase extends FunctionalTestCase {
 	protected static final int TIMEOUT_SEC = 120;
 	protected static final String TEMPLATE_NAME = "contact-migration";
 
-	protected SubflowInterceptingChainLifecycleWrapper checkContactflow;
-	protected SubflowInterceptingChainLifecycleWrapper checkAccountflow;
+	protected SubflowInterceptingChainLifecycleWrapper retrieveContactFromBFlow;
+	protected SubflowInterceptingChainLifecycleWrapper retrieveAccountFlowFromB;
 
 	@Rule
 	public DynamicPort port = new DynamicPort("http.port");
@@ -85,65 +87,6 @@ public class AbstractTemplateTestCase extends FunctionalTestCase {
 		return properties;
 	}
 
-	protected void deleteTestContactFromSandBox(List<Map<String, Object>> createdContacts) throws Exception {
-		List<String> idList = new ArrayList<String>();
-
-		// Delete the created contacts in A
-		SubflowInterceptingChainLifecycleWrapper flow = getSubFlow("deleteContactFromAFlow");
-		flow.initialise();
-		for (Map<String, Object> c : createdContacts) {
-			idList.add((String) c.get("Id"));
-		}
-		flow.process(getTestEvent(idList, MessageExchangePattern.REQUEST_RESPONSE));
-		idList.clear();
-
-		// Delete the created contacts in B
-		flow = getSubFlow("deleteContactFromBFlow");
-		flow.initialise();
-		for (Map<String, Object> c : createdContacts) {
-			Map<String, Object> contact = invokeRetrieveFlow(checkContactflow, c);
-			if (contact != null) {
-				idList.add((String) contact.get("Id"));
-			}
-		}
-		flow.process(getTestEvent(idList, MessageExchangePattern.REQUEST_RESPONSE));
-	}
-
-	protected void deleteTestAccountFromSandBox(List<Map<String, Object>> createdAccounts) throws Exception {
-		// Delete the created accounts in A
-		SubflowInterceptingChainLifecycleWrapper flow = getSubFlow("deleteAccountFromAFlow");
-		flow.initialise();
-
-		List<Object> idList = new ArrayList<Object>();
-		for (Map<String, Object> c : createdAccounts) {
-			idList.add(c.get("Id"));
-		}
-		flow.process(getTestEvent(idList, MessageExchangePattern.REQUEST_RESPONSE));
-
-		// Delete the created accounts in B
-		flow = getSubFlow("deleteAccountFromBFlow");
-		flow.initialise();
-		idList.clear();
-		for (Map<String, Object> c : createdAccounts) {
-			Map<String, Object> account = invokeRetrieveFlow(checkAccountflow, c);
-			if (account != null) {
-				idList.add(account.get("Id"));
-			}
-		}
-		flow.process(getTestEvent(idList, MessageExchangePattern.REQUEST_RESPONSE));
-	}
-
-	protected String buildUniqueName(String templateName, String name) {
-		String timeStamp = new Long(new Date().getTime()).toString();
-
-		StringBuilder builder = new StringBuilder();
-		builder.append(name);
-		builder.append(templateName);
-		builder.append(timeStamp);
-
-		return builder.toString();
-	}
-
 	@SuppressWarnings("unchecked")
 	protected Map<String, Object> invokeRetrieveFlow(SubflowInterceptingChainLifecycleWrapper flow, Map<String, Object> payload) throws Exception {
 		MuleEvent event = flow.process(getTestEvent(payload, MessageExchangePattern.REQUEST_RESPONSE));
@@ -170,6 +113,76 @@ public class AbstractTemplateTestCase extends FunctionalTestCase {
 								.with("Phone", "123456789")
 								.with("Title", "Dr")
 								.build();
+	}
+
+	protected void deleteTestContactFromSandBox(List<Map<String, Object>> createdContactsInA) throws Exception {
+		deleteTestContactsFromSandBoxA(createdContactsInA);
+		deleteTestContactsFromSandBoxB(createdContactsInA);
+	}
+
+	protected void deleteTestContactsFromSandBoxA(List<Map<String, Object>> createdContactsInA) throws InitialisationException, MuleException, Exception {
+		SubflowInterceptingChainLifecycleWrapper deleteContactFromAFlow = getSubFlow("deleteContactFromAFlow");
+		deleteContactFromAFlow.initialise();
+		deleteTestEntityFromSandBox(deleteContactFromAFlow, createdContactsInA);
+	}
+
+	protected void deleteTestContactsFromSandBoxB(List<Map<String, Object>> createdContactsInA) throws InitialisationException, MuleException, Exception {
+		List<Map<String, Object>> createdContactsInB = new ArrayList<Map<String, Object>>();
+		for (Map<String, Object> c : createdContactsInA) {
+			Map<String, Object> contact = invokeRetrieveFlow(retrieveContactFromBFlow, c);
+			if (contact != null) {
+				createdContactsInB.add(contact);
+			}
+		}
+		SubflowInterceptingChainLifecycleWrapper deleteContactFromBFlow = getSubFlow("deleteContactFromBFlow");
+		deleteContactFromBFlow.initialise();
+		deleteTestEntityFromSandBox(deleteContactFromBFlow, createdContactsInB);
+	}
+
+	protected void deleteTestAccountFromSandBox(List<Map<String, Object>> createdAccountsInA) throws Exception {
+		deleteTestAccountsFromSandBoxA(createdAccountsInA);
+		deleteTestAccountsFromSandBoxB(createdAccountsInA);
+	}
+
+	protected void deleteTestAccountsFromSandBoxA(List<Map<String, Object>> createdAccountsInA) throws InitialisationException, MuleException, Exception {
+		SubflowInterceptingChainLifecycleWrapper deleteAccountFromAFlow = getSubFlow("deleteAccountFromAFlow");
+		deleteAccountFromAFlow.initialise();
+
+		deleteTestEntityFromSandBox(deleteAccountFromAFlow, createdAccountsInA);
+	}
+
+	protected void deleteTestAccountsFromSandBoxB(List<Map<String, Object>> createdAccountsInA) throws InitialisationException, MuleException, Exception {
+		List<Map<String, Object>> createdAccountsInB = new ArrayList<Map<String, Object>>();
+		for (Map<String, Object> a : createdAccountsInA) {
+			Map<String, Object> account = invokeRetrieveFlow(retrieveAccountFlowFromB, a);
+			if (account != null) {
+				createdAccountsInB.add(account);
+			}
+		}
+
+		SubflowInterceptingChainLifecycleWrapper deleteAccountFromBFlow = getSubFlow("deleteAccountFromBFlow");
+		deleteAccountFromBFlow.initialise();
+		deleteTestEntityFromSandBox(deleteAccountFromBFlow, createdAccountsInB);
+	}
+
+	protected void deleteTestEntityFromSandBox(SubflowInterceptingChainLifecycleWrapper deleteFlow, List<Map<String, Object>> entitities) throws MuleException, Exception {
+		List<String> idList = new ArrayList<String>();
+		for (Map<String, Object> c : entitities) {
+			idList.add(c.get("Id")
+						.toString());
+		}
+		deleteFlow.process(getTestEvent(idList, MessageExchangePattern.REQUEST_RESPONSE));
+	}
+
+	protected String buildUniqueName(String templateName, String name) {
+		String timeStamp = new Long(new Date().getTime()).toString();
+
+		StringBuilder builder = new StringBuilder();
+		builder.append(name);
+		builder.append(templateName);
+		builder.append(timeStamp);
+
+		return builder.toString();
 	}
 
 	protected String buildUniqueEmail(String user) {

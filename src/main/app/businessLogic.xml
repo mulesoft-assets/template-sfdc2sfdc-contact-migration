@@ -20,6 +20,8 @@ http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schem
                 </enricher>
             </batch:step>
             <batch:step name="findOrCreateAccountInBSetp" filter-expression="! ('syncAccount'=='${account.sync.policy}')">
+            <choice doc:name="Choice">
+                	<when expression="#[payload['Account'] != null]">
                 <enricher source="#[payload]" target="#[flowVars['accountInB']]" doc:name="store result in accountInB">
                     <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, Name FROM Account WHERE Name = '#[payload['Account']['Name']]'" doc:name="query Account in  Salesforce Instance B"/>
                 </enricher>
@@ -45,6 +47,11 @@ payload['Account'].put('NumberOfEmployees', Integer.parseInt(payload['Account'][
                 </choice>
                 <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= recordVars['idOfAccountInB'];
 ]]></expression-component>
+</when>
+                    <otherwise>
+                        <logger level="INFO" doc:name="Logger" message="There is no Account assigned to this contact. Doing nothing"/>
+                    </otherwise>
+                </choice>
             </batch:step>
             <batch:step name="setDummyAccountIdStep" filter-expression="! ('assignDummyAccount'=='${account.sync.policy}')">
                 <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= '${account.id.in.b}';]]></expression-component>
