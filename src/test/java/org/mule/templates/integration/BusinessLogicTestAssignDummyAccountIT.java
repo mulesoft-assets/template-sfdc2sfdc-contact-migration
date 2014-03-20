@@ -43,7 +43,6 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplateTestC
 	public static void init() {
 		System.setProperty("account.sync.policy", "assignDummyAccount");
 		System.setProperty("account.id.in.b", ACCOUNT_ID_IN_B);
-
 	}
 
 	@AfterClass
