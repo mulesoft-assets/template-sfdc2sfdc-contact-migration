@@ -93,7 +93,7 @@ In order to use this Anypoint Template you need to configure properties (Credent
 
 #### EMail Details
 + mail.from=batch.contact.migration%40mulesoft.com
-+ mail.to=damian.sima@mulesoft.com
++ mail.to=destination.mail@mulesoft.com
 + mail.subject=Batch Job Finished Report
 
 # Customize It!<a name="customizeit"/>
