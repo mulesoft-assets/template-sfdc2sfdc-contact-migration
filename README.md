@@ -2,10 +2,10 @@
 
 + [Use Case](#usecase)
 + [Run it!](#runit)
+    * [Running on premise](#runonpremise)
     * [Running on CloudHub](#runoncloudhub)
-    	* [Deploying your Anypoint Template on CloudHub](#deployingyouranypointtemplateoncloudhub)
-    * [Running on premise](#runonopremise)
-        * [Properties to be configured](#propertiestobeconfigured)
+    * [Properties to be configured](#propertiestobeconfigured)
++ [API Calls](#apicalls)
 + [Customize It!](#customizeit)
     * [config.xml](#configxml)
     * [endpoints.xml](#endpointsxml)
@@ -42,6 +42,25 @@ In any of the ways you would like to run this Anypoint Template, here is an exam
 <b>Start execution on: </b>Mon Jan 13 18:05:33 GMT-03:00 2014
 </pre>
 
+## Running on premise <a name="runonpremise"/>
+
+In this section we detail the way you have to run you Anypoint Temple on you computer.
+
+
+### Running on Studio <a name="runonstudio"/>
+Once you have imported your Anypoint Template into Anypoint Studio you need to follow these steps to run it:
+
++ Locate the properties file `mule.dev.properties`, in src/main/resources
++ Complete all the properties required as per the examples in the section [Properties to be configured](#propertiestobeconfigured)
++ Once that is done, right click on you Anypoint Template project folder 
++ Hover you mouse over `"Run as"`
++ Click on  `"Mule Application"`
+
+
+### Running on Mule ESB stand alone  <a name="runonmuleesbstandalone"/>
+Complete all properties in one of the property files, for example in [mule.prod.properties] (../blob/master/src/main/resources/mule.prod.properties) and run your app with the corresponding environment variable to use it. To follow the example, this will be `mule.env=prod`.
+
+Once your app is all set and started, there is no need to do anything else. The application will poll SalesForce to know if there are any newly created or updated objects and synchronice them.
 
 ## Running on CloudHub <a name="runoncloudhub"/>
 
@@ -52,13 +71,6 @@ Once your app is all set and started, supposing you choose as domain name `sfdcc
 ### Deploying your Anypoint Template on CloudHub <a name="deployingyouranypointtemplateoncloudhub"/>
  	
 Mule Studio provides you with really easy way to deploy your Anypoint Template directly to CloudHub, for the specific steps to do so please check this [link](http://www.mulesoft.org/documentation/display/current/Deploying+Mule+Applications#DeployingMuleApplications-DeploytoCloudHub)
-
-
-## Running on premise <a name="runonopremise"/>
-Complete all properties in one of the property files, for example in [mule.prod.properties] (../blob/master/src/main/resources/mule.prod.properties) and run your app with the corresponding environment variable to use it. To follow the example, this will be `mule.env=prod`.
-
-After this, to trigger the use case you just need to hit the local http endpoint with the port you configured in your file. If this is, for instance, `9090` then you should hit: `http://localhost:9090/synccontacts` and this will create a CSV report and send it to the mails set.
-
 
 
 ## Properties to be configured (With examples)<a name="propertiestobeconfigured"/>
@@ -95,6 +107,19 @@ In order to use this Anypoint Template you need to configure properties (Credent
 + mail.from=batch.contact.migration%40mulesoft.com
 + mail.to=destination.mail@mulesoft.com
 + mail.subject=Batch Job Finished Report
+
+# API Calls <a name="apicalls"/>
+
+SalesForce imposes limits on the number of API Calls that can be made. Therefore calculating this amount may be an important factor to consider. User Broadcast Template calls to the API can be calculated using the formula:
+
+***1 + 3 X + X / 200***
+
+Being ***X*** the number of Users to be synchronized on each run. 
+
+The division by ***200*** is because, by default, Users are gathered in groups of 200 for each Upsert API Call in the commit step.	
+
+For instance if 10 records are fetched from origin instance, then 34 api calls will be made (1 + 3 10 + 3). This is the worst case scenario where it's require to also move the parent account for each contact.
+
 
 # Customize It!<a name="customizeit"/>
 
