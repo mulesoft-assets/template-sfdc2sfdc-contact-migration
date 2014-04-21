@@ -110,11 +110,11 @@ In order to use this Anypoint Template you need to configure properties (Credent
 
 # API Calls <a name="apicalls"/>
 
-SalesForce imposes limits on the number of API Calls that can be made. Therefore calculating this amount may be an important factor to consider. User Broadcast Template calls to the API can be calculated using the formula:
+SalesForce imposes limits on the number of API Calls that can be made. Therefore calculating this amount may be an important factor to consider. Contact Migration  Template calls to the API can be calculated using the formula:
 
 ***1 + 3 X + X / 200***
 
-Being ***X*** the number of Users to be synchronized on each run. 
+Being ***X*** the number of Contacts to be synchronized on each run. 
 
 The division by ***200*** is because, by default, Users are gathered in groups of 200 for each Upsert API Call in the commit step.	
 
