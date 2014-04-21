@@ -1,5 +1,6 @@
 # Anypoint Template: SFDC to SFDC Contacts Migration
 
++ [License Agreement](#licenseagreement)
 + [Use Case](#usecase)
 + [Run it!](#runit)
     * [Running on premise](#runonpremise)
@@ -14,7 +15,9 @@
 + [Testing the Anypoint Template](#testingtheanypointtemplate)
 
    
-
+# License Agreement <a name="licenseagreement"/>
+Note that using this template is subject to the conditions of this [License Agreement](AnypointTemplateLicense.pdf).
+Please review the terms of the license before downloading and using this template. In short, you are allowed to use the template for free with Mule ESB Enterprise Edition, CloudHub, or as a trial in Anypoint Studio.
 
 # Use Case <a name="usecase"/>
 As a Salesforce admin I want to syncronize contacts between two Salesfoce orgs.
