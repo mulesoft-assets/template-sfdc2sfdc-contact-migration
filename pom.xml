@@ -13,8 +13,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<!-- <mule.version>3.5.0-M4</mule.version> -->
-		<mule.version>3.5.0-M5-SNAPSHOT</mule.version>
+		<mule.version>3.5.0-M4</mule.version>
 		<munit.version>3.5-M1</munit.version>
 		<junit.version>4.9</junit.version>
 
@@ -443,37 +442,6 @@
 			<version>${mule.version}</version>
 			<scope>provided</scope>
 		</dependency>
-
-
-
-		<!-- ******************* -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>commons-lang</groupId> -->
-<!-- 			<artifactId>commons-lang</artifactId> -->
-<!-- 			<version>2.4</version> -->
-<!-- 			<scope>provided</scope> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>commons-collections</groupId> -->
-<!-- 			<artifactId>commons-collections</artifactId> -->
-<!-- 			<version>3.2.1</version> -->
-<!-- 			<scope>provided</scope> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>commons-io</groupId> -->
-<!-- 			<artifactId>commons-io</artifactId> -->
-<!-- 			<version>1.4</version> -->
-<!-- 			<scope>provided</scope> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.geronimo.specs</groupId> -->
-<!-- 			<artifactId>geronimo-j2ee-connector_1.5_spec</artifactId> -->
-<!-- 			<version>1.1</version> -->
-<!-- 			<scope>provided</scope> -->
-<!-- 		</dependency> -->
-
-		<!-- ****************** -->
-
 
 		<!-- Connectors -->
 		<dependency>
