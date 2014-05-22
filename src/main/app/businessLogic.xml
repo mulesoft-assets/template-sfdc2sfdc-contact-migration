@@ -19,7 +19,7 @@ http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schem
                     <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, LastModifiedDate FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="query contact in Salesforce instance B"/>
                 </enricher>
             </batch:step>
-            <batch:step name="findOrCreateAccountInBSetp" filter-expression="! ('syncAccount'=='${account.sync.policy}')">
+            <batch:step name="findOrCreateAccountInBSetp" accept-expression="'syncAccount' != '${account.sync.policy}'">
             <choice doc:name="Choice">
                 	<when expression="#[payload['Account'] != null]">
                 <enricher source="#[payload]" target="#[flowVars['accountInB']]" doc:name="store result in accountInB">
@@ -53,10 +53,10 @@ payload['Account'].put('NumberOfEmployees', payload['Account']['NumberOfEmployee
                     </otherwise>
                 </choice>
             </batch:step>
-            <batch:step name="setDummyAccountIdStep" filter-expression="! ('assignDummyAccount'=='${account.sync.policy}')">
+            <batch:step name="setDummyAccountIdStep" accept-expression="'assignDummyAccount' == '${account.sync.policy}'">
                 <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= '${account.id.in.b}';]]></expression-component>
             </batch:step>
-            <batch:step name="selectNewerContactStep" filter-expression="#[recordVars['contactInB'] is NullPayload]">
+            <batch:step name="selectNewerContactStep" accept-expression="!(recordVars['contactInB'] is NullPayload)">
                 <choice doc:name="Choice">
                     <when expression="#[org.mule.templates.util.ContactDateComparator.isAfter(payload, recordVars['contactInB'])]">
                         <expression-component doc:name="define Id in SalesForce Intance B"><![CDATA[payload['Id'] = recordVars['contactInB']['Id']
@@ -68,7 +68,7 @@ payload['Account'].put('NumberOfEmployees', payload['Account']['NumberOfEmployee
                     </otherwise>
                 </choice>
             </batch:step>
-            <batch:step name="createContactsInBStep" filter-expression="#[payload is NullPayload]">
+            <batch:step name="createContactsInBStep" accept-expression="!(payload is NullPayload)">
                 <expression-component doc:name="remove Fields type and LastModifiedDate"><![CDATA[payload.remove('type'); 
 payload.remove('LastModifiedDate');
 payload.remove('Account');]]></expression-component>
