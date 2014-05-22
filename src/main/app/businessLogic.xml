@@ -19,7 +19,7 @@ http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schem
                     <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, LastModifiedDate FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="query contact in Salesforce instance B"/>
                 </enricher>
             </batch:step>
-            <batch:step name="findOrCreateAccountInBSetp" accept-expression="'syncAccount' != '${account.sync.policy}'">
+            <batch:step name="findOrCreateAccountInBSetp" accept-expression="'syncAccount' == '${account.sync.policy}'">
             <choice doc:name="Choice">
                 	<when expression="#[payload['Account'] != null]">
                 <enricher source="#[payload]" target="#[flowVars['accountInB']]" doc:name="store result in accountInB">
