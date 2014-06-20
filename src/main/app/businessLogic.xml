@@ -11,7 +11,8 @@ http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schem
     <batch:job name="migrateContactsBatch">
         <batch:threading-profile poolExhaustedAction="WAIT"/>
         <batch:input>
-			<sfdc:query config-ref="SalesforceA" query="SELECT Department,Description,Email,FirstName,LastModifiedDate,LastName,MailingCity,MailingCountry,MobilePhone,Phone,Title, Account.Id, Account.Name, Account.AccountNumber, Account.AccountSource, Account.AnnualRevenue, Account.BillingCity, Account.BillingCountry, Account.BillingPostalCode, Account.BillingState, Account.BillingStreet, Account.Description, Account.Fax, Account.Industry, Account.NumberOfEmployees, Account.Ownership, Account.ParentId, Account.Phone, Account.Rating, Account.ShippingCity, Account.ShippingCountry, Account.ShippingPostalCode, Account.ShippingState, Account.ShippingStreet, Account.Sic, Account.SicDesc, Account.Site, Account.TickerSymbol, Account.Type, Account.Website FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email ASC" doc:name="query Contacts from Salesforce instance A" fetchSize="${page.size}"/>
+			<sfdc:query config-ref="SalesforceA" query="SELECT Description,Email,FirstName,LastModifiedDate,LastName,MailingCountry,Title, Account.Id, Account.Name, Account.AccountNumber, Account.Description, Account.Industry, Account.NumberOfEmployees
+FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email ASC" doc:name="query Contacts from Salesforce instance A" fetchSize="${page.size}"/>
         </batch:input> 
         <batch:process-records>
             <batch:step name="getContactInBStep">
