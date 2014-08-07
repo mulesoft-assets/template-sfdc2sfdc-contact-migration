@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+<mule xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
 http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
@@ -57,17 +57,10 @@ payload['Account'].put('NumberOfEmployees', payload['Account']['NumberOfEmployee
             <batch:step name="setDummyAccountIdStep" accept-expression="'assignDummyAccount' == '${account.sync.policy}'">
                 <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= '${account.id.in.b}';]]></expression-component>
             </batch:step>
-            <batch:step name="selectNewerContactStep" accept-expression="!(recordVars['contactInB'] is NullPayload)">
-                <choice doc:name="Choice">
-                    <when expression="#[org.mule.templates.util.ContactDateComparator.isAfter(payload, recordVars['contactInB'])]">
-                        <expression-component doc:name="define Id in SalesForce Intance B"><![CDATA[payload['Id'] = recordVars['contactInB']['Id']
+            <batch:step name="setContactIdInB" accept-expression="!(recordVars['contactInB'] is NullPayload)">
+                <expression-component doc:name="define Id in SalesForce Instance B"><![CDATA[payload['Id'] = recordVars['contactInB']['Id']
 
 ]]></expression-component>
-                    </when>
-                    <otherwise>
-                        <set-payload doc:name="set to null to skip this contact" value="#[return null]"/>
-                    </otherwise>
-                </choice>
             </batch:step>
             <batch:step name="createContactsInBStep" accept-expression="!(payload is NullPayload)">
                 <expression-component doc:name="remove Fields type and LastModifiedDate"><![CDATA[payload.remove('type'); 
