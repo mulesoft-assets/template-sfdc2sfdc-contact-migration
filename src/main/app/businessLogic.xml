@@ -57,13 +57,9 @@ payload['Account'].put('NumberOfEmployees', payload['Account']['NumberOfEmployee
             <batch:step name="setDummyAccountIdStep" accept-expression="'assignDummyAccount' == '${account.sync.policy}'">
                 <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= '${account.id.in.b}';]]></expression-component>
             </batch:step>
-            <batch:step name="setContactIdInB" accept-expression="!(recordVars['contactInB'] is NullPayload)">
-                <expression-component doc:name="define Id in SalesForce Instance B"><![CDATA[payload['Id'] = recordVars['contactInB']['Id']
-
-]]></expression-component>
-            </batch:step>
             <batch:step name="createContactsInBStep" accept-expression="!(payload is NullPayload)">
-                <expression-component doc:name="remove Fields type and LastModifiedDate"><![CDATA[payload.remove('type'); 
+                <expression-component doc:name="prepare properties for upsert"><![CDATA[payload['Id'] = recordVars['contactInB'] is NullPayload ? null : recordVars['contactInB']['Id'];
+payload.remove('type'); 
 payload.remove('LastModifiedDate');
 payload.remove('Account');]]></expression-component>
             	
