@@ -128,34 +128,37 @@ public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplatesTest
 	@Test
 	public void testMainFlow()
 			throws MuleException, Exception {
-		// Build test contacts
-		SfdcObjectBuilder contact = aContact()
+		long time = System.currentTimeMillis();
+		
+		// Build test contacts for org A
+		SfdcObjectBuilder justCreatedContact = aContact()
 				.with("FirstName", "Manuel")
 				.with("LastName", "Valadares")
 				.with("MailingCountry", "US")
 				.with("Email",
 						ANYPOINT_TEMPLATE_NAME + "-"
-								+ System.currentTimeMillis()
+								+ time
 								+ "portuga@mail.com");
-
-		SfdcObjectBuilder justCreatedContact = contact;
-		SfdcObjectBuilder updatedContact = contact;
+		
+		// Build test contact to be updated in org B 
+		SfdcObjectBuilder toBeupdatedContact = justCreatedContact
+				.with("LastName", "ValadaresToBeUpdated");
 
 		// Create contacts in sand-boxes and keep track of them for posterior
 		// cleaning up
 		contactsCreatedInA.add(createTestContactsInSfdcSandbox(
 				justCreatedContact.build(), createContactInAFlow));
 		contactsCreatedInB.add(createTestContactsInSfdcSandbox(
-				updatedContact.build(), createContactInBFlow));
+				toBeupdatedContact.build(), createContactInBFlow));
 
 		// Execution
 		executeWaitAndAssertBatchJob(B_INBOUND_FLOW_NAME);
 
 		// Assertions
 		Map<String, String> retrievedContactFromA = (Map<String, String>) queryContact(
-				contact.build(), queryContactFromAFlow);
+				justCreatedContact.build(), queryContactFromAFlow);
 		Map<String, String> retrievedContactFromB = (Map<String, String>) queryContact(
-				contact.build(), queryContactFromBFlow);
+				justCreatedContact.build(), queryContactFromBFlow);
 
 		final MapDifference<String, String> mapsDifference = Maps.difference(
 				retrievedContactFromA, retrievedContactFromB);
@@ -193,7 +196,7 @@ public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplatesTest
 			throws Exception {
 
 		// Execute synchronization
-		runSchedulersOnce(flowConstructName);
+		runFlow(flowConstructName);
 
 		// Wait for the batch job execution to finish
 		batchTestHelper.awaitJobTermination(TIMEOUT_MILLIS * 1000, 500);

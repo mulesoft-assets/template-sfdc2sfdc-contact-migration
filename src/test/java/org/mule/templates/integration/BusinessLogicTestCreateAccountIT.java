@@ -12,10 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -46,8 +42,9 @@ import com.sforce.soap.partner.SaveResult;
 public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase {
 
 	private static final String ANYPOINT_TEMPLATE_NAME = "sfdc2sfdc-contact-migration";
-	private static final String B_INBOUND_FLOW_NAME = "triggerMainFlow";
-	private static final String AN_ACCOUNT_ID_IN_B = "0012000001AHHlvAAH";
+	private static final String B_INBOUND_FLOW_NAME = "mainFlow";
+	private static final String AN_ACCOUNT_ID_IN_A = "0012000001C0Uh1AAF";
+	
 	private static final int TIMEOUT_MILLIS = 60;
 
 	private static List<String> contactsCreatedInA = new ArrayList<String>();
@@ -60,8 +57,6 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 	private InterceptingChainLifecycleWrapper queryContactFromAFlow;
 	private InterceptingChainLifecycleWrapper queryContactFromBFlow;
 	private BatchTestHelper batchTestHelper;
-	private SubflowInterceptingChainLifecycleWrapper createAccountInAFlow;
-	private SubflowInterceptingChainLifecycleWrapper createAccountInBFlow;
 	private SubflowInterceptingChainLifecycleWrapper queryContactsAccountNameFromAFlow;
 	private SubflowInterceptingChainLifecycleWrapper queryContactsAccountNameFromBFlow;
 	
@@ -115,14 +110,6 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 		// Flow for querying the contact in sfdc B instance
 		queryContactFromBFlow = getSubFlow("queryContactFromBFlow");
 		queryContactFromBFlow.initialise();
-		
-		// Flow for creating accounts in sfdc A instance
-		createAccountInAFlow = getSubFlow("createAccountInAFlow");
-		createAccountInAFlow.initialise();
-		
-		// Flow for creating accounts in sfdc B instance
-		createAccountInBFlow = getSubFlow("createAccountInBFlow");
-		createAccountInBFlow.initialise();
 
 		// Flow for querying accounts in sfdc A instance
 		queryContactsAccountNameFromAFlow = getSubFlow("queryContactsAccountNameFromAFlow");
@@ -162,12 +149,12 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 								+ System.currentTimeMillis()
 								+ "portuga@mail.com");
 
-		SfdcObjectBuilder contactB = contact.with("AccountId", AN_ACCOUNT_ID_IN_B);
+		SfdcObjectBuilder contactA = contact.with("AccountId", AN_ACCOUNT_ID_IN_A);
 
 		// Create contact in sand-box and keep track of it for posterior
 		// cleaning up
-		contactsCreatedInB.add(createTestContactsInSfdcSandbox(
-				contactB.build(), createContactInBFlow));
+		contactsCreatedInA.add(createTestContactsInSfdcSandbox(
+				contactA.build(), createContactInAFlow));
 
 		// Execution
 		executeWaitAndAssertBatchJob(B_INBOUND_FLOW_NAME);
@@ -222,7 +209,7 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 			throws Exception {
 
 		// Execute synchronization
-		runSchedulersOnce(flowConstructName);
+		runFlow(flowConstructName);
 
 		// Wait for the batch job execution to finish
 		batchTestHelper.awaitJobTermination(TIMEOUT_MILLIS * 1000, 500);

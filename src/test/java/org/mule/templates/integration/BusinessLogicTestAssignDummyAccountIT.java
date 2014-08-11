@@ -43,7 +43,7 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplatesTest
 
 	private static final String ANYPOINT_TEMPLATE_NAME = "sfdc2sfdc-contact-migration";
 	private static final String B_INBOUND_FLOW_NAME = "mainFlow";
-	private static final String ACCOUNT_ID_IN_B = "0012000001AHHlvAAH";  
+	private static final String ACCOUNT_ID_IN_B = "0012000001AHHlyAAH";
 	private static final int TIMEOUT_MILLIS = 60;
 
 	private static List<String> contactsCreatedInA = new ArrayList<String>();
@@ -52,14 +52,10 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplatesTest
 	private static SubflowInterceptingChainLifecycleWrapper deleteContactFromBFlow;
 
 	private SubflowInterceptingChainLifecycleWrapper createContactInAFlow;
-	private SubflowInterceptingChainLifecycleWrapper createContactInBFlow;
 	private InterceptingChainLifecycleWrapper queryContactFromAFlow;
 	private InterceptingChainLifecycleWrapper queryContactFromBFlow;
+	private InterceptingChainLifecycleWrapper queryContactsIdFromBFlow;
 	private BatchTestHelper batchTestHelper;
-	private SubflowInterceptingChainLifecycleWrapper createAccountInAFlow;
-	private SubflowInterceptingChainLifecycleWrapper createAccountInBFlow;
-	private SubflowInterceptingChainLifecycleWrapper queryContactsAccountNameFromAFlow;
-	private SubflowInterceptingChainLifecycleWrapper queryContactsAccountNameFromBFlow;
 	
 	@Rule
 	public DynamicPort port = new DynamicPort("http.port");
@@ -95,10 +91,6 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplatesTest
 		createContactInAFlow = getSubFlow("createContactInAFlow");
 		createContactInAFlow.initialise();
 
-		// Flow for creating contacts in sfdc B instance
-		createContactInBFlow = getSubFlow("createContactInBFlow");
-		createContactInBFlow.initialise();
-
 		// Flow for deleting contacts in sfdc A instance
 		deleteContactFromAFlow = getSubFlow("deleteContactFromAFlow");
 		deleteContactFromAFlow.initialise();
@@ -115,21 +107,10 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplatesTest
 		queryContactFromBFlow = getSubFlow("queryContactFromBFlow");
 		queryContactFromBFlow.initialise();
 		
-		// Flow for creating accounts in sfdc A instance
-		createAccountInAFlow = getSubFlow("createAccountInAFlow");
-		createAccountInAFlow.initialise();
+		// Flow for querying the contact in sfdc B instance
+		queryContactsIdFromBFlow = getSubFlow("queryContactsIdFromBFlow");
+		queryContactsIdFromBFlow.initialise();
 		
-		// Flow for creating accounts in sfdc B instance
-		createAccountInBFlow = getSubFlow("createAccountInBFlow");
-		createAccountInBFlow.initialise();
-
-		// Flow for querying accounts in sfdc A instance
-		queryContactsAccountNameFromAFlow = getSubFlow("queryContactsAccountNameFromAFlow");
-		queryContactsAccountNameFromAFlow.initialise();
-
-		// Flow for querying accounts in sfdc B instance
-		queryContactsAccountNameFromBFlow = getSubFlow("queryContactsAccountNameFromBFlow");
-		queryContactsAccountNameFromBFlow.initialise();
 	}
 
 	private static void cleanUpSandboxesByRemovingTestContacts()
@@ -161,12 +142,10 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplatesTest
 								+ System.currentTimeMillis()
 								+ "portuga@mail.com");
 
-		SfdcObjectBuilder contactA = contact.with("AccountId", ACCOUNT_ID_IN_B);
-
 		// Create contact in sand-box and keep track of it for posterior
 		// cleaning up
 		contactsCreatedInA.add(createTestContactsInSfdcSandbox(
-				contactA.build(), createContactInAFlow));
+				contact.build(), createContactInAFlow));
 
 		// Execution
 		executeWaitAndAssertBatchJob(B_INBOUND_FLOW_NAME);
@@ -182,6 +161,12 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplatesTest
 		Assert.assertTrue(
 				"Some contacts are not synchronized between systems. "
 						+ contactMapsDifference.toString(), contactMapsDifference.areEqual());
+		
+		
+		Map<String, String> retrieveContactFromB = (Map<String, String>) queryContact(
+				contact.build(), queryContactsIdFromBFlow);
+		// Keep track on created/migrated contact in org B
+		contactsCreatedInB.add(retrieveContactFromB.get("Id"));
 	}
 
 	private Object queryContact(Map<String, Object> contact,
