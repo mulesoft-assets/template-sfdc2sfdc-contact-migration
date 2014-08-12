@@ -107,7 +107,7 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplatesTest
 		queryContactFromBFlow = getSubFlow("queryContactFromBFlow");
 		queryContactFromBFlow.initialise();
 		
-		// Flow for querying the contact in sfdc B instance
+		// Flow for querying the contact id in sfdc B instance
 		queryContactsIdFromBFlow = getSubFlow("queryContactsIdFromBFlow");
 		queryContactsIdFromBFlow.initialise();
 		
@@ -162,11 +162,10 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplatesTest
 				"Some contacts are not synchronized between systems. "
 						+ contactMapsDifference.toString(), contactMapsDifference.areEqual());
 		
-		
-		Map<String, String> retrieveContactFromB = (Map<String, String>) queryContact(
+		Map<String, String> retrieveContactIdFromB = (Map<String, String>) queryContact(
 				contact.build(), queryContactsIdFromBFlow);
 		// Keep track on created/migrated contact in org B
-		contactsCreatedInB.add(retrieveContactFromB.get("Id"));
+		contactsCreatedInB.add(retrieveContactIdFromB.get("Id"));
 	}
 
 	private Object queryContact(Map<String, Object> contact,

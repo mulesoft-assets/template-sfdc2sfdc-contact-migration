@@ -128,7 +128,6 @@ public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplatesTest
 	@Test
 	public void testMainFlow()
 			throws MuleException, Exception {
-		long time = System.currentTimeMillis();
 		
 		// Build test contacts for org A
 		SfdcObjectBuilder justCreatedContact = aContact()
@@ -137,7 +136,7 @@ public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplatesTest
 				.with("MailingCountry", "US")
 				.with("Email",
 						ANYPOINT_TEMPLATE_NAME + "-"
-								+ time
+								+ System.currentTimeMillis()
 								+ "portuga@mail.com");
 		
 		// Build test contact to be updated in org B 

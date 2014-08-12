@@ -56,9 +56,10 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 	private SubflowInterceptingChainLifecycleWrapper createContactInBFlow;
 	private InterceptingChainLifecycleWrapper queryContactFromAFlow;
 	private InterceptingChainLifecycleWrapper queryContactFromBFlow;
-	private BatchTestHelper batchTestHelper;
+	private InterceptingChainLifecycleWrapper queryContactsIdFromBFlow;
 	private SubflowInterceptingChainLifecycleWrapper queryContactsAccountNameFromAFlow;
 	private SubflowInterceptingChainLifecycleWrapper queryContactsAccountNameFromBFlow;
+	private BatchTestHelper batchTestHelper;
 	
 	@Rule
 	public DynamicPort port = new DynamicPort("http.port");
@@ -118,6 +119,10 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 		// Flow for querying accounts in sfdc B instance
 		queryContactsAccountNameFromBFlow = getSubFlow("queryContactsAccountNameFromBFlow");
 		queryContactsAccountNameFromBFlow.initialise();
+		
+		// Flow for querying the contact id in sfdc B instance
+		queryContactsIdFromBFlow = getSubFlow("queryContactsIdFromBFlow");
+		queryContactsIdFromBFlow.initialise();
 	}
 
 	private static void cleanUpSandboxesByRemovingTestContacts()
@@ -164,7 +169,7 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 				contact.build(), queryContactFromAFlow);
 		Map<String, String> retrievedContactFromB = (Map<String, String>) queryContact(
 				contact.build(), queryContactFromBFlow);
-
+		
 		final MapDifference<String, String> contactMapsDifference = Maps.difference(
 				retrievedContactFromA, retrievedContactFromB);
 		Assert.assertTrue(
@@ -179,6 +184,11 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 				retrievedContactsAccountIdFromA, retrievedContactsAccountIdFromB);
 		Assert.assertTrue("The contact should belong to the same account!" 
 						+ accountMapsDifference.toString(), accountMapsDifference.areEqual());
+		
+		Map<String, String> retrieveContactIdFromB = (Map<String, String>) queryContact(
+				contact.build(), queryContactsIdFromBFlow);
+		// Keep track on created/migrated contact in org B
+		contactsCreatedInB.add(retrieveContactIdFromB.get("Id"));
 	}
 
 	private Object queryContact(Map<String, Object> contact,
