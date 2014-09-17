@@ -20,39 +20,9 @@ FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email 
                     <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, LastModifiedDate FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="query contact in Salesforce instance B"/>
                 </enricher>
             </batch:step>
-            <batch:step name="findOrCreateAccountInBSetp" accept-expression="'syncAccount' == '${account.sync.policy}'">
-            <choice doc:name="Choice">
-                	<when expression="#[payload['Account'] != null]">
-                <enricher source="#[payload]" target="#[flowVars['accountInB']]" doc:name="store result in accountInB">
-                    <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, Name FROM Account WHERE Name = '#[payload['Account']['Name']]'" doc:name="query Account in  Salesforce Instance B"/>
-                </enricher>
-                <choice doc:name="Choice">
-                    <when expression="#[flowVars['accountInB'] is NullPayload]">
-                        <enricher doc:name="store result in idOfAccountInB" target="#[recordVars['idOfAccountInB']]">
-	                        <processor-chain doc:name="Processor Chain">
-                                <expression-component doc:name="remove unnecessary fields"><![CDATA[payload['Account'].remove('Id');
-payload['Account'].put('NumberOfEmployees', payload['Account']['NumberOfEmployees'] == null ? 0 :  Integer.parseInt(payload['Account']['NumberOfEmployees']) );]]></expression-component>
-                                <set-payload value="#[ [payload['Account']]]" doc:name="Set Payload"/>
-       		                     <sfdc:create config-ref="SalesforceB" type="Account" doc:name="create Account in Salesforce Instance B">
-       	    	                     <sfdc:objects ref="#[payload]"/>
-       	        	             </sfdc:create>
-                                <expression-transformer expression="#[payload[0].getId()]" doc:name="get new account id"/>
-	                        </processor-chain>
-                        </enricher>
-                    </when>
-                    <otherwise>
-                        <enricher target="#[recordVars['idOfAccountInB']]" doc:name="store result in idOfAccountInB">
-     	                   <expression-transformer expression="#[flowVars['accountInB']['Id']]" doc:name="get new account id"/>
-                        </enricher>
-                    </otherwise>
-                </choice>
-                <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= recordVars['idOfAccountInB'];
-]]></expression-component>
-</when>
-                    <otherwise>
-                        <logger level="INFO" doc:name="Logger" message="There is no Account assigned to this contact. Doing nothing"/>
-                    </otherwise>
-                </choice>
+            <batch:step name="findOrCreateAccountInBStep" accept-expression="'syncAccount' == '${account.sync.policy}'">
+                <flow-ref name="findOrCreateAccountFlow" doc:name="trigger findOrCreateAccountFlow"/>
+
             </batch:step>
             <batch:step name="setDummyAccountIdStep" accept-expression="'assignDummyAccount' == '${account.sync.policy}'">
                 <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= '${account.id.in.b}';]]></expression-component>
@@ -71,19 +41,60 @@ payload.remove('Account');]]></expression-component>
             </batch:step>
         </batch:process-records>
         <batch:on-complete>
-            <scatter-gather doc:name="All">
-                <processor-chain>
-            		<json:object-to-json-transformer doc:name="transform BatchJobInstance to JSON"/>
-            		<logger message="Migration process has finished: #[payload]" level="INFO" doc:name="log 'Migration process has finished'"/>
-						<logger message="Migration process has finished:" level="INFO" doc:name="log 'Migration process has finished'"/>
-                </processor-chain>
-				<processor-chain>
-                	<json:object-to-json-transformer doc:name="transform BatchJobInstance to JSON"/>
-					<smtp:outbound-endpoint host="${smtp.host}" port="${smtp.port}" user="${smtp.user}" password="${smtp.password}" to="${mail.to}" from="${mail.from}" subject="${mail.subject}" responseTimeout="10000" connector-ref="gmailConnector" doc:name="send mail"/>
-				</processor-chain>
-            </scatter-gather>
+            <flow-ref name="sendEmailLogResultFlow" doc:name="trigger sendEmailLogResultFlow"/>
+
         </batch:on-complete>
     </batch:job>
+    <sub-flow name="findOrCreateAccountFlow" doc:name="findOrCreateAccountFlow">
+        <choice doc:name="Choice">
+            <when expression="#[payload['Account'] != null]">
+                <enricher source="#[payload]" target="#[flowVars['accountInB']]" doc:name="store result in accountInB">
+                    <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, Name FROM Account WHERE Name = '#[payload['Account']['Name']]'" doc:name="query Account in  Salesforce Instance B"/>
+                </enricher>
+                <choice doc:name="Choice">
+                    <when expression="#[flowVars['accountInB'] is NullPayload]">
+                        <flow-ref name="createAccountFlow" doc:name="trigger CreateAccountFlow"/>
+                    </when>
+                    <otherwise>
+                        <enricher target="#[recordVars['idOfAccountInB']]" doc:name="store result in idOfAccountInB">
+                            <expression-transformer expression="#[flowVars['accountInB']['Id']]" doc:name="get new account id"/>
+                        </enricher>
+                    </otherwise>
+                </choice>
+                <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= recordVars['idOfAccountInB'];
+]]></expression-component>
+            </when>
+            <otherwise>
+                <logger message="There is no Account assigned to this contact. Doing nothing" level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+    </sub-flow>
+    <sub-flow name="createAccountFlow" doc:name="createAccountFlow">
+        <enricher target="#[recordVars['idOfAccountInB']]" doc:name="store result in idOfAccountInB">
+            <processor-chain doc:name="Processor Chain">
+                <expression-component doc:name="remove unnecessary fields"><![CDATA[payload['Account'].remove('Id');
+payload['Account'].put('NumberOfEmployees', payload['Account']['NumberOfEmployees'] == null ? 0 :  Integer.parseInt(payload['Account']['NumberOfEmployees']) );]]></expression-component>
+                <set-payload value="#[ [payload['Account']]]" doc:name="Set Payload"/>
+                <sfdc:create config-ref="SalesforceB" type="Account" doc:name="create Account in Salesforce Instance B">
+                    <sfdc:objects ref="#[payload]"/>
+                </sfdc:create>
+                <expression-transformer expression="#[payload[0].getId()]" doc:name="get new account id"/>
+            </processor-chain>
+        </enricher>
+    </sub-flow>
+    <sub-flow name="sendEmailLogResultFlow" doc:name="sendEmailLogResultFlow">
+        <scatter-gather doc:name="All">
+            <processor-chain>
+                <json:object-to-json-transformer doc:name="transform BatchJobInstance to JSON"/>
+                <logger message="Migration process has finished: #[payload]" level="INFO" doc:name="log 'Migration process has finished'"/>
+                <logger message="Migration process has finished:" level="INFO" doc:name="log 'Migration process has finished'"/>
+            </processor-chain>
+            <processor-chain>
+                <json:object-to-json-transformer doc:name="transform BatchJobInstance to JSON"/>
+                <smtp:outbound-endpoint host="${smtp.host}" port="${smtp.port}" user="${smtp.user}" password="${smtp.password}" connector-ref="gmailConnector" to="${mail.to}" from="${mail.from}" subject="${mail.subject}" responseTimeout="10000" doc:name="send mail"/>
+            </processor-chain>
+        </scatter-gather>
+    </sub-flow>
     <flow name="mainFlow" doc:name="mainFlow" processingStrategy="synchronous" doc:description="This flow is the entry point to the Anypoint Template  business logic.
 
 This flow should control the direction of the application, and it should be called by the different endpoints that your Anypoint Template  exposes to trigger it.
