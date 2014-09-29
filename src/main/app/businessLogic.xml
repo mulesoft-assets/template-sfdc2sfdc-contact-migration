@@ -87,7 +87,6 @@ payload['Account'].put('NumberOfEmployees', payload['Account']['NumberOfEmployee
             <processor-chain>
                 <json:object-to-json-transformer doc:name="transform BatchJobInstance to JSON"/>
                 <logger message="Migration process has finished: #[payload]" level="INFO" doc:name="log 'Migration process has finished'"/>
-                <logger message="Migration process has finished:" level="INFO" doc:name="log 'Migration process has finished'"/>
             </processor-chain>
             <processor-chain>
                 <json:object-to-json-transformer doc:name="transform BatchJobInstance to JSON"/>
