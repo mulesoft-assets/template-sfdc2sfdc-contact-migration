@@ -21,7 +21,14 @@ FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email 
                 </enricher>
             </batch:step>
             <batch:step name="findOrCreateAccountInBStep" accept-expression="'syncAccount' == '${account.sync.policy}'">
-                <flow-ref name="findOrCreateAccountFlow" doc:name="trigger findOrCreateAccountFlow"/>
+                <choice doc:name="Choice">
+                    <when expression="#[payload['Account'] != null]">
+                        <flow-ref name="findOrCreateAccountFlow" doc:name="trigger findOrCreateAccountFlow"/>
+                    </when>
+                    <otherwise>
+                        <logger message="There is no Account assigned to this contact. Doing nothing" level="INFO" doc:name="Logger"/>
+                    </otherwise>
+                </choice>
 
             </batch:step>
             <batch:step name="setDummyAccountIdStep" accept-expression="'assignDummyAccount' == '${account.sync.policy}'">
@@ -46,28 +53,21 @@ payload.remove('Account');]]></expression-component>
         </batch:on-complete>
     </batch:job>
     <sub-flow name="findOrCreateAccountFlow" doc:name="findOrCreateAccountFlow">
+        <enricher source="#[payload]" target="#[flowVars['accountInB']]" doc:name="store result in accountInB">
+            <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, Name FROM Account WHERE Name = '#[payload['Account']['Name']]'" doc:name="query Account in  Salesforce Instance B"/>
+        </enricher>
         <choice doc:name="Choice">
-            <when expression="#[payload['Account'] != null]">
-                <enricher source="#[payload]" target="#[flowVars['accountInB']]" doc:name="store result in accountInB">
-                    <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, Name FROM Account WHERE Name = '#[payload['Account']['Name']]'" doc:name="query Account in  Salesforce Instance B"/>
-                </enricher>
-                <choice doc:name="Choice">
-                    <when expression="#[flowVars['accountInB'] is NullPayload]">
-                        <flow-ref name="createAccountFlow" doc:name="trigger CreateAccountFlow"/>
-                    </when>
-                    <otherwise>
-                        <enricher target="#[recordVars['idOfAccountInB']]" doc:name="store result in idOfAccountInB">
-                            <expression-transformer expression="#[flowVars['accountInB']['Id']]" doc:name="get new account id"/>
-                        </enricher>
-                    </otherwise>
-                </choice>
-                <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= recordVars['idOfAccountInB'];
-]]></expression-component>
+            <when expression="#[flowVars['accountInB'] is NullPayload]">
+                <flow-ref name="createAccountFlow" doc:name="trigger CreateAccountFlow"/>
             </when>
             <otherwise>
-                <logger message="There is no Account assigned to this contact. Doing nothing" level="INFO" doc:name="Logger"/>
+                <enricher target="#[recordVars['idOfAccountInB']]" doc:name="store result in idOfAccountInB">
+                    <expression-transformer expression="#[flowVars['accountInB']['Id']]" doc:name="get new account id"/>
+                </enricher>
             </otherwise>
         </choice>
+        <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= recordVars['idOfAccountInB'];
+]]></expression-component>
     </sub-flow>
     <sub-flow name="createAccountFlow" doc:name="createAccountFlow">
         <enricher target="#[recordVars['idOfAccountInB']]" doc:name="store result in idOfAccountInB">
