@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+<mule xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.6.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
 http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
@@ -52,7 +52,7 @@ payload.remove('Account');]]></expression-component>
 
         </batch:on-complete>
     </batch:job>
-    <sub-flow name="findOrCreateAccountFlow" doc:name="findOrCreateAccountFlow">
+    <sub-flow name="findOrCreateAccountFlow" >
         <enricher source="#[payload]" target="#[flowVars['accountInB']]" doc:name="store result in accountInB">
             <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, Name FROM Account WHERE Name = '#[payload['Account']['Name']]'" doc:name="query Account in  Salesforce Instance B"/>
         </enricher>
@@ -69,7 +69,7 @@ payload.remove('Account');]]></expression-component>
         <expression-component doc:name="set AccountId"><![CDATA[payload['AccountId']= recordVars['idOfAccountInB'];
 ]]></expression-component>
     </sub-flow>
-    <sub-flow name="createAccountFlow" doc:name="createAccountFlow">
+    <sub-flow name="createAccountFlow" >
         <enricher target="#[recordVars['idOfAccountInB']]" doc:name="store result in idOfAccountInB">
             <processor-chain doc:name="Processor Chain">
                 <expression-component doc:name="remove unnecessary fields"><![CDATA[payload['Account'].remove('Id');
@@ -82,7 +82,7 @@ payload['Account'].put('NumberOfEmployees', payload['Account']['NumberOfEmployee
             </processor-chain>
         </enricher>
     </sub-flow>
-    <sub-flow name="sendEmailLogResultFlow" doc:name="sendEmailLogResultFlow">
+    <sub-flow name="sendEmailLogResultFlow" >
         <scatter-gather doc:name="All">
             <processor-chain>
                 <json:object-to-json-transformer doc:name="transform BatchJobInstance to JSON"/>
@@ -94,7 +94,7 @@ payload['Account'].put('NumberOfEmployees', payload['Account']['NumberOfEmployee
             </processor-chain>
         </scatter-gather>
     </sub-flow>
-    <flow name="mainFlow" doc:name="mainFlow" processingStrategy="synchronous" doc:description="This flow is the entry point to the Anypoint Template  business logic.
+    <flow name="mainFlow"  processingStrategy="synchronous" doc:description="This flow is the entry point to the Anypoint Template  business logic.
 
 This flow should control the direction of the application, and it should be called by the different endpoints that your Anypoint Template  exposes to trigger it.
 
