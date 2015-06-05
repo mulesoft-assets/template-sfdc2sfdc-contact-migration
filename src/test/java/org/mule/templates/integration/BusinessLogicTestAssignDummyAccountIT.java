@@ -43,7 +43,7 @@ public class BusinessLogicTestAssignDummyAccountIT extends AbstractTemplatesTest
 
 	private static final String ANYPOINT_TEMPLATE_NAME = "sfdc2sfdc-contact-migration";
 	private static final String B_INBOUND_FLOW_NAME = "mainFlow";
-	private static final String ACCOUNT_ID_IN_B = "0012000001AHHlyAAH";
+	private static final String ACCOUNT_ID_IN_B = "0012000001Ook37AAB";
 	private static final int TIMEOUT_MILLIS = 60;
 
 	private static List<String> contactsCreatedInA = new ArrayList<String>();

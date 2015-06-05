@@ -43,7 +43,7 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 
 	private static final String ANYPOINT_TEMPLATE_NAME = "sfdc2sfdc-contact-migration";
 	private static final String B_INBOUND_FLOW_NAME = "mainFlow";
-	private static final String AN_ACCOUNT_ID_IN_A = "0012000001C0Uh1AAF";
+	private static final String AN_ACCOUNT_ID_IN_A = "0012000001OU3wHAAT";
 	
 	private static final int TIMEOUT_MILLIS = 60;
 
