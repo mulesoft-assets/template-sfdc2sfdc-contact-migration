@@ -32,7 +32,7 @@ This Anypoint Template should serve as a foundation for the process of migrating
 As implemented, this Anypoint Template leverage the [Batch Module](http://www.mulesoft.org/documentation/display/current/Batch+Processing).
 The batch job is divided in  Input, Process and On Complete stages.
 During the Input stage the Anypoint Template will go to the Salesforce Org A and query all the existing Contacts that match the filter criteria.
-During the Process stage, each SFDC Contact will be filtered depending on, if it has an existing matching contact in the SFDC Org B and if the last updated date of the later is greater than the one of SFDC Org A.
+During the Process stage, each SFDC Contact will be filtered depending on, if it has an existing matching contact in the SFDC Org B.
 The last step of the Process stage will group the contacts and create them in SFDC Org B.
 Finally during the On Complete stage the Anypoint Template will both output statistics data into the console and send a notification email with the results of the batch execution.
 In any event the Anypoint Template can be configure to also move over the Account to which the Contact is related. The application can either, create the Account if it doesn't exists, assign the Contact to a pre existing Account in Salesforce instance B, or do nothing in what regards to the Account.
@@ -153,13 +153,11 @@ In order to use this Mule Anypoint Template you need to configure properties (Cr
 **Application configuration**
 + http.port `9090` 
 + account.sync.policy `syncAccount`
-+ account.id.in.b `001n0000003fMWXAA2`
 
 **Note:** the property **account.sync.policy** can take any of the three following values: 
 
 + **empty_value**: if the propety has no value assigned to it then application will do nothing in what respect to the account and it'll just move the contact over.
-+ **syncAccount**: it will try to create the contact's account should this is not pressent in the Salesforce instance B.
-+ **assignDummyAccount**: it will assign the cotact to an pre existing account in Salesforce instance B. For this it will use the value of  `account.id.in.b`. Finding the Id of the desired Account can be done by executing in your **Sales Force Developer Console** the following query: `SELECT Id, Name, Description FROM Account`.
++ **syncAccount**: it will try to create new contact's account if is not pressent in the Salesforce instance B or assign already any according to the Account's name.
 
 **Salesforce Connector configuration for company A**
 + sfdc.a.username `bob.dylan@orga`
@@ -212,7 +210,7 @@ In the visual editor they can be found on the *Global Element* tab.
 
 ## businessLogic.xml<a name="businesslogicxml"/>
 Functional aspect of the Anypoint Template is implemented on this XML, directed by one flow responsible of excecuting the logic.
-For the pourpose of this particular Anypoint Template the *mainFlow* just excecutes the Batch Job which handles all the logic of it.
+For the purpose of this particular Anypoint Template the *mainFlow* just excecutes the Batch Job which handles all the logic of it.
 This flow has Exception Strategy that basically consists on invoking the *defaultChoiseExceptionStrategy* defined in *errorHandling.xml* file.
 
 
