@@ -25,7 +25,7 @@ FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email 
         </batch:input> 
         <batch:process-records>
             <batch:step name="getContactInBStep">
-                <enricher source="#[payload == null ? null : payload.Id]" target="#[payload.Id]" doc:name="store result in record var 'contactInB'">
+                <enricher source="#[payload == null ? null : payload.Id]" target="#[payload.Id]" doc:name="store result in 'payload.Id'">
                     <sfdc:query-single config-ref="SalesforceB" query="SELECT Id FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="Query contact in Salesforce instance B"/>
                 </enricher>
             </batch:step>
@@ -64,7 +64,7 @@ payload map
 					<sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="Upsert contacts in org B" externalIdFieldName="Id">
                         <sfdc:objects ref="#[payload]"/>
 					</sfdc:upsert>
-                    <logger level="INFO" doc:name="Logger"/>
+
                 </batch:commit>
             </batch:step>
         </batch:process-records>
@@ -74,7 +74,7 @@ payload map
         </batch:on-complete>
     </batch:job>
     <sub-flow name="findOrCreateAccountFlow" >
-        <enricher source="#[payload == null ? null : payload.Id]" target="#[payload.AccountId]" doc:name="store result in accountInB">
+        <enricher source="#[payload == null ? null : payload.Id]" target="#[payload.AccountId]" doc:name="store result in 'payload.AccountId'">
             <sfdc:query-single config-ref="SalesforceB" query="SELECT Id FROM Account WHERE Name = '#[payload['Account']['Name']]'" doc:name="Query Account in  Salesforce Instance B"/>
         </enricher>
         <choice doc:name="Choice">
@@ -89,7 +89,7 @@ payload map
 
     </sub-flow>
     <sub-flow name="createAccountFlow" >
-        <enricher target="#[payload['AccountId']]" doc:name="store result in idOfAccountInB">
+        <enricher target="#[payload['AccountId']]" doc:name="store result in 'payload.AccountId'">
             <processor-chain doc:name="Processor Chain">
                 <dw:transform-message doc:name="Transform Message">
                     <dw:set-payload><![CDATA[%dw 1.0
