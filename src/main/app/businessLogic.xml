@@ -20,16 +20,18 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
     <batch:job name="migrateContactsBatch">
         <batch:threading-profile poolExhaustedAction="WAIT"/>
         <batch:input>
-			<sfdc:query config-ref="SalesforceA" query="SELECT Description,Email,FirstName,LastName,MailingCountry,Title, Account.Id, Account.Name, Account.AccountNumber, Account.Description, Account.Industry, Account.NumberOfEmployees
+			<sfdc:query config-ref="SalesforceA" query="SELECT Description,Email,FirstName,LastName,LastModifiedDate,MailingCountry,Title, Account.Id, Account.Name, Account.AccountNumber, Account.Description, Account.Industry, Account.NumberOfEmployees
 FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email ASC" doc:name="Query Contacts from Salesforce instance A" fetchSize="${page.size}"/>
         </batch:input> 
         <batch:process-records>
             <batch:step name="getContactInBStep">
-                <enricher source="#[payload == null ? null : payload.Id]" target="#[payload.Id]" doc:name="store result in 'payload.Id'">
-                    <sfdc:query-single config-ref="SalesforceB" query="SELECT Id FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="Query contact in Salesforce instance B"/>
+                <enricher   doc:name="store result in 'payload.Id' and payload.LastModifiedDateB">
+                    <sfdc:query-single config-ref="SalesforceB" query="SELECT Id, LastModifiedDate FROM Contact WHERE Email = '#[payload['Email']]'" doc:name="Query contact in Salesforce instance B"/>
+                    <enrich source="#[payload == null ? null : payload.Id]" target="#[payload.Id]"/>
+                    <enrich source="#[payload == null ? null : payload.LastModifiedDate]" target="#[payload.LastModifiedDateB]"/>
                 </enricher>
             </batch:step>
-            <batch:step name="findOrCreateAccountInBStep" accept-expression="'syncAccount' == '${account.sync.policy}'">
+            <batch:step name="findOrCreateAccountInBStep" accept-expression="'syncAccount' == '${account.sync.policy}' &amp;&amp; (payload['LastModifiedDateB'] == null || payload['LastModifiedDate'] &gt; payload['LastModifiedDateB'])">
                 <choice doc:name="Choice">
                     <when expression="#[payload['Account'] != null]">
                         <flow-ref name="findOrCreateAccountFlow" doc:name="Trigger findOrCreateAccountFlow"/>
@@ -41,7 +43,7 @@ FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email 
 
             </batch:step>
 
-            <batch:step name="createContactsInBStep" accept-expression="!(payload is NullPayload)">
+            <batch:step name="createContactsInBStep" accept-expression="!(payload is NullPayload) &amp;&amp;  (payload['LastModifiedDateB'] == null || payload['LastModifiedDate'] &gt; payload['LastModifiedDateB'])">
 
             	
                 <batch:commit size="200" doc:name="Batch Commit">
@@ -58,7 +60,7 @@ payload map
 	LastName: $.LastName,
 	MailingCountry: $.MailingCountry,
 	Title: $.Title,
-	AccountId: $.AccountId when ($.AccountId != null) otherwise null
+	(AccountId: $.AccountId) when ($.AccountId != null) 
 }]]></dw:set-payload>
                     </dw:transform-message>
 					<sfdc:upsert config-ref="SalesforceB"  type="Contact" doc:name="Upsert contacts in org B" externalIdFieldName="Id">

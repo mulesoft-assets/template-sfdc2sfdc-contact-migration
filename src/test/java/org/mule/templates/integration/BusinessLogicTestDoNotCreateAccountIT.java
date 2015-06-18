@@ -145,10 +145,10 @@ public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplatesTest
 
 		// Create contacts in sand-boxes and keep track of them for posterior
 		// cleaning up
-		contactsCreatedInA.add(createTestContactsInSfdcSandbox(
-				justCreatedContact.build(), createContactInAFlow));
 		contactsCreatedInB.add(createTestContactsInSfdcSandbox(
 				toBeupdatedContact.build(), createContactInBFlow));
+		contactsCreatedInA.add(createTestContactsInSfdcSandbox(
+				justCreatedContact.build(), createContactInAFlow));
 
 		// Execution
 		executeWaitAndAssertBatchJob(B_INBOUND_FLOW_NAME);

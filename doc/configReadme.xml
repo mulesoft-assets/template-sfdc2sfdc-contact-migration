@@ -12,7 +12,7 @@ This Anypoint Template should serve as a foundation for the process of migrating
 As implemented, this Anypoint Template leverage the [Batch Module](http://www.mulesoft.org/documentation/display/current/Batch+Processing).
 The batch job is divided in  Input, Process and On Complete stages.
 During the Input stage the Anypoint Template will go to the Salesforce Org A and query all the existing Contacts that match the filter criteria.
-During the Process stage, each SFDC Contact will be filtered depending on, if it has an existing matching contact in the SFDC Org B.
+During the Process stage, each SFDC Contact will be filtered depending on, if it has an existing matching contact in the SFDC Org B and if the last updated date of the contact from SFDC Org A is greater than the one in SFDC Org B(in case that the same contact already exists).
 The last step of the Process stage will group the contacts and create them in SFDC Org B.
 Finally during the On Complete stage the Anypoint Template will both output statistics data into the console and send a notification email with the results of the batch execution.
 In any event the Anypoint Template can be configure to also move over the Account to which the Contact is related. The application can either, create the Account if it doesn't exists, assign the Contact to a pre existing Account in Salesforce instance B, or do nothing in what regards to the Account. 
