@@ -147,6 +147,7 @@ public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplatesTest
 		// cleaning up
 		contactsCreatedInB.add(createTestContactsInSfdcSandbox(
 				toBeupdatedContact.build(), createContactInBFlow));
+		Thread.sleep(5000);
 		contactsCreatedInA.add(createTestContactsInSfdcSandbox(
 				justCreatedContact.build(), createContactInAFlow));
 
