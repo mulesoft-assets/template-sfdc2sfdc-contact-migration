@@ -45,7 +45,7 @@ public class BusinessLogicTestCreateAccountIT extends AbstractTemplatesTestCase 
 	private static final String B_INBOUND_FLOW_NAME = "mainFlow";
 	private static final String AN_ACCOUNT_ID_IN_A = "0012000001OU3wHAAT";
 	
-	private static final int TIMEOUT_MILLIS = 60;
+	private static final int TIMEOUT_MILLIS = 180;
 
 	private static List<String> contactsCreatedInA = new ArrayList<String>();
 	private static List<String> contactsCreatedInB = new ArrayList<String>();

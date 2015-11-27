@@ -43,7 +43,7 @@ public class BusinessLogicTestDoNotCreateAccountIT extends AbstractTemplatesTest
 
 	private static final String B_INBOUND_FLOW_NAME = "mainFlow";
 	private static final String ANYPOINT_TEMPLATE_NAME = "sfdc2sfdc-contact-migration";
-	private static final int TIMEOUT_MILLIS = 60;
+	private static final int TIMEOUT_MILLIS = 180;
 
 	private static List<String> contactsCreatedInA = new ArrayList<String>();
 	private static List<String> contactsCreatedInB = new ArrayList<String>();
