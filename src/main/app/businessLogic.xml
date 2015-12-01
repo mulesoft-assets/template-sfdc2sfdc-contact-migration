@@ -31,7 +31,7 @@ FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email 
                     <enrich source="#[payload == null ? null : payload.LastModifiedDate]" target="#[payload.LastModifiedDateB]"/>
                 </enricher>
             </batch:step>
-            <batch:step name="findOrCreateAccountInBStep" accept-expression="'syncAccount' == '${account.sync.policy}' &amp;&amp; (payload['LastModifiedDateB'] == null || payload['LastModifiedDate'] &gt; payload['LastModifiedDateB'])">
+            <batch:step name="findOrCreateAccountInBStep" accept-expression="'syncAccount' == '${account.sync.policy}' &amp;&amp; (payload['LastModifiedDateB'] == null || (new org.joda.time.DateTime(payload.LastModifiedDate)).isAfter(new org.joda.time.DateTime(payload.LastModifiedDateB)))">
                 <choice doc:name="Choice">
                     <when expression="#[payload['Account'] != null]">
                         <flow-ref name="findOrCreateAccountFlow" doc:name="Trigger findOrCreateAccountFlow"/>
@@ -43,7 +43,7 @@ FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email 
 
             </batch:step>
 
-            <batch:step name="createContactsInBStep" accept-expression="!(payload is NullPayload) &amp;&amp;  (payload['LastModifiedDateB'] == null || payload['LastModifiedDate'] &gt; payload['LastModifiedDateB'])">
+            <batch:step name="createContactsInBStep" accept-expression="payload != null &amp;&amp;  (payload['LastModifiedDateB'] == null || (new org.joda.time.DateTime(payload.LastModifiedDate)).isAfter(new org.joda.time.DateTime(payload.LastModifiedDateB)))">
 
             	
                 <batch:commit size="200" doc:name="Batch Commit">
