@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:spring="http://www.springframework.org/schema/beans"
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:spring="http://www.springframework.org/schema/beans"
 	  xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" 
 	  xmlns:json="http://www.mulesoft.org/schema/mule/json"
 	  xmlns:batch="http://www.mulesoft.org/schema/mule/batch" 
@@ -9,15 +9,15 @@
 	  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	   
 	  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
-http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+	  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
 http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
-    <batch:job name="migrateContactsBatch">
+    <batch:job name="migrateContactsBatch" max-failed-records="-1">
         <batch:threading-profile poolExhaustedAction="WAIT"/>
         <batch:input>
 			<sfdc:query config-ref="SalesforceA" query="SELECT Description,Email,FirstName,LastName,LastModifiedDate,MailingCountry,Title, Account.Id, Account.Name, Account.AccountNumber, Account.Description, Account.Industry, Account.NumberOfEmployees
@@ -31,21 +31,20 @@ FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email 
                     <enrich source="#[payload == null ? null : payload.LastModifiedDate]" target="#[payload.LastModifiedDateB]"/>
                 </enricher>
             </batch:step>
-            <batch:step name="findOrCreateAccountInBStep" accept-expression="'syncAccount' == '${account.sync.policy}' &amp;&amp; (payload['LastModifiedDateB'] == null || (new org.joda.time.DateTime(payload.LastModifiedDate)).isAfter(new org.joda.time.DateTime(payload.LastModifiedDateB)))">
-                <choice doc:name="Choice">
-                    <when expression="#[payload['Account'] != null]">
-                        <flow-ref name="findOrCreateAccountFlow" doc:name="Trigger findOrCreateAccountFlow"/>
-                    </when>
-                    <otherwise>
-                        <logger message="There is no Account assigned to this contact. Doing nothing" level="INFO" doc:name="Logger"/>
-                    </otherwise>
-                </choice>
-
+            
+            <batch:step name="findAccountInBStep" accept-expression="'syncAccount' == '${account.sync.policy}' &amp;&amp; payload['Account'] != null &amp;&amp; (payload['LastModifiedDateB'] == null || (new org.joda.time.DateTime(payload.LastModifiedDate)).isAfter(new org.joda.time.DateTime(payload.LastModifiedDateB)))">
+            	<enricher source="#[payload == null ? null : payload.Id]" target="#[payload.AccountId]" doc:name="store result in 'payload.AccountId'">
+            		<sfdc:query-single config-ref="SalesforceB" query="SELECT Id FROM Account WHERE Name = '#[payload['Account']['Name']]'" doc:name="Query Account in  Salesforce Instance B"/>
+        		</enricher>
+            </batch:step>
+            
+            <batch:step name="createAccountInBIfNecessaryStep" accept-expression="payload != null &amp;&amp;  payload.Account != null &amp;&amp; payload.AccountId == null &amp;&amp; (payload['LastModifiedDateB'] == null || (new org.joda.time.DateTime(payload.LastModifiedDate)).isAfter(new org.joda.time.DateTime(payload.LastModifiedDateB)))">
+                <batch:commit size="200" doc:name="Batch Commit">
+                	<flow-ref name="createAccountsFlow" doc:name="Call createAccountsFlow"/>
+                </batch:commit>
             </batch:step>
 
             <batch:step name="createContactsInBStep" accept-expression="payload != null &amp;&amp;  (payload['LastModifiedDateB'] == null || (new org.joda.time.DateTime(payload.LastModifiedDate)).isAfter(new org.joda.time.DateTime(payload.LastModifiedDateB)))">
-
-            	
                 <batch:commit size="200" doc:name="Batch Commit">
                     <dw:transform-message doc:name="Prepare payload for upsert">
                         <dw:set-payload><![CDATA[%dw 1.0
@@ -71,47 +70,38 @@ payload map
             </batch:step>
         </batch:process-records>
         <batch:on-complete>
-            <flow-ref name="sendEmailLogResultFlow" doc:name="Trigger sendEmailLogResultFlow"/>
+            <flow-ref name="sendEmailLogResultFlow" doc:name="Call sendEmailLogResultFlow"/>
 
         </batch:on-complete>
     </batch:job>
-    <sub-flow name="findOrCreateAccountFlow" >
-        <enricher source="#[payload == null ? null : payload.Id]" target="#[payload.AccountId]" doc:name="store result in 'payload.AccountId'">
-            <sfdc:query-single config-ref="SalesforceB" query="SELECT Id FROM Account WHERE Name = '#[payload['Account']['Name']]'" doc:name="Query Account in  Salesforce Instance B"/>
-        </enricher>
-        <choice doc:name="Choice">
-            <when expression="#[payload['AccountId'] == null]">
-                <flow-ref name="createAccountFlow" doc:name="Trigger CreateAccountFlow"/>
-            </when>
-            <otherwise>
-                <logger message="Account already exists. Nothing to create." level="INFO" doc:name="Logger"/>
-
-            </otherwise>
-        </choice>
-
-    </sub-flow>
-    <sub-flow name="createAccountFlow" >
-        <enricher target="#[payload['AccountId']]" doc:name="store result in 'payload.AccountId'" source="#[payload.getId()]">
-            <processor-chain doc:name="Processor Chain">
-                <dw:transform-message doc:name="Transform payload to Account Map">
+    
+    <sub-flow name="createAccountsFlow" >
+                <dw:transform-message doc:name="Transform payload to list of Account maps">
                     <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
+payload map
 {
-	AccountNumber: payload.Account.AccountNumber,
-	Description : payload.Account.Description,
-	Name: payload.Account.Name,
-	(NumberOfEmployees : payload.Account.NumberOfEmployees as :number {class: "java.lang.Integer"}) when (payload.Account.NumberOfEmployees != null),
-	Industry: payload.Account.Industry
+	AccountNumber: $.Account.AccountNumber,
+	Description : $.Account.Description,
+	Name: $.Account.Name,
+	(NumberOfEmployees : $.Account.NumberOfEmployees as :number {class: "java.lang.Integer"}) when ($.Account.NumberOfEmployees != null),
+	Industry: $.Account.Industry
 }]]></dw:set-payload>
                 </dw:transform-message>
-
-                <sfdc:create-single config-ref="SalesforceB" type="Account" doc:name="create Account in Salesforce Instance B">
-
-                </sfdc:create-single>
-
-            </processor-chain>
-        </enricher>
+        <sfdc:create config-ref="SalesforceB" type="Account" doc:name="create Account in Salesforce Instance B">
+            <sfdc:objects ref="#[payload]"/>
+        </sfdc:create>
+        <foreach doc:name="For Each">
+            <choice doc:name="Choice">
+                <when expression="#[payload.success]">
+                    <expression-component doc:name="Set the AccountId"><![CDATA[records[counter-1].payload['AccountId'] = payload.id]]></expression-component>
+                </when>
+                <otherwise>
+                    <logger message="could not create account for record " doc:name="Log 'could not create account for record'"/>
+                </otherwise>
+            </choice>
+        </foreach>
     </sub-flow>
     <sub-flow name="sendEmailLogResultFlow" >
         <scatter-gather doc:name="All">
