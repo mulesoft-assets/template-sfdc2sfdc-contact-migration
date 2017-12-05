@@ -37,16 +37,15 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 		doc:id="233e532c-8296-4ddd-ac67-e2b7984b3609">
 		<tls:trust-store insecure="true" />
 	</tls:context>
-	<configuration-properties file="mule-artifact.properties" doc:name="Configuration properties" doc:id="46877740-aac5-4812-8728-4718689aa9ec" />
+	<configuration-properties file="mule.${mule.env}.properties" doc:name="Configuration properties" doc:id="46877740-aac5-4812-8728-4718689aa9ec" />
 	<configuration-properties file="common.properties" doc:name="Configuration properties" doc:id="dffa4da7-cc5c-4ecb-922e-1115b4387354" />
-	<configuration-properties file="mule.${mule.env}.properties" doc:name="Configuration properties" doc:id="674beef8-9485-40a7-99b9-0685c9b7e863" />
 	
-	<flow name="template-sfdc2sfdc-account-migrationFlow" doc:id="884f86c5-66e1-4701-bb9b-594c2a60abf3" >
+	<flow name="template-sfdc2sfdc-contact-migrationFlow" doc:id="884f86c5-66e1-4701-bb9b-594c2a60abf3" >
 		<http:listener config-ref="HTTP_Listener_config" path="/migrate" doc:name="/migrate" doc:id="1a64d758-b02b-4675-b66a-f7c9f4fcab6b" />
 		<salesforce:query config-ref="Salesforce_Sfdc_A_config" doc:name="Query Accounts from Salesforce instance A" doc:id="ebcf71a8-3192-4437-b2cb-b23f008afae5">
 			<salesforce:salesforce-query>SELECT Description,Email,FirstName,LastName,LastModifiedDate,MailingCountry,Title, Account.Id, Account.Name, Account.AccountNumber, Account.Description, Account.Industry, Account.NumberOfEmployees FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email ASC</salesforce:salesforce-query>
 		</salesforce:query>
-		<batch:job jobName="template-sfdc2sfdc-account-migrationBatch_Job" doc:id="79b373e6-1aeb-43a9-9dfe-8ac0d2f31fdc">
+		<batch:job jobName="migrateContactsBatch" doc:id="79b373e6-1aeb-43a9-9dfe-8ac0d2f31fdc">
 			<batch:process-records >
 				<batch:step name="queryAccountStep" doc:id="232087de-e311-49c1-a890-439c65ea1af2" >
 					<salesforce:query-single config-ref="Salesforce_Sfdc_B_config" doc:name="Query contact in Salesforce B" doc:id="573f94bc-79b9-4219-b6bd-65200b61b7a2" target="IdInSF">
@@ -66,13 +65,13 @@ payload ++ vars.IdInSF]]></ee:set-payload>
 						</ee:message>
 					</ee:transform>
 				</batch:step>
-				<batch:step name="findOrCreateAccountInSalesforceStep" doc:id="acaea295-d3c0-46b5-b869-e3e59b429110" acceptExpression='#["${account.sync.policy}" == "syncAccount" and payload.AccountName != null]'>
+				<batch:step name="findOrCreateAccountInSalesforceStep" doc:id="acaea295-d3c0-46b5-b869-e3e59b429110" acceptExpression='#["${account.sync.policy}" == "syncAccount" and payload.Account != null]'>
 					<salesforce:query-single config-ref="Salesforce_Sfdc_B_config" doc:name="Query account in Salesforce B" doc:id="e3e41eb8-00b9-47bd-9717-e1513e6a79b1" target="accountId">
 						<salesforce:salesforce-query>SELECT Id FROM Account WHERE Name = ':name'</salesforce:salesforce-query>
 						<salesforce:parameters><![CDATA[#[output applicaton/java
 ---
 {
-	"name" : payload.AccountName
+	"name" : payload.Account.Name
 }]]]></salesforce:parameters>
 					</salesforce:query-single>
 					<ee:transform doc:name="Save record payload" doc:id="a6285fc1-69c9-4034-8baf-6a60e6041938" >
@@ -93,13 +92,12 @@ payload ++ {AccountId : vars.accountId.Id}]]></ee:set-variable>
 									<ee:set-payload><![CDATA[%dw 2.0
 output application/java
 ---
-payload map
 {
-	AccountNumber: $.Account.AccountNumber,
-	Description : $.Account.Description,
-	Name: $.Account.Name,
-	NumberOfEmployees : $.Account.NumberOfEmployees,
-	Industry: $.Account.Industry
+	AccountNumber: payload.Account.AccountNumber,
+	Description : payload.Account.Description,
+	Name: payload.Account.Name,
+	NumberOfEmployees : payload.Account.NumberOfEmployees,
+	Industry: payload.Account.Industry
 }]]></ee:set-payload>
 								</ee:message>
 							</ee:transform>
