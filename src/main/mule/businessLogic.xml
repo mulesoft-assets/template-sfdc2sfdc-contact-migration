@@ -13,35 +13,8 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
 http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
-	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="910654bf-9fd9-4073-bad4-cf951b7f0022" >
-		<http:listener-connection host="0.0.0.0" port="${http.port}" />
-	</http:listener-config>
-	<salesforce:sfdc-config name="Salesforce_Sfdc_A_config"
-		doc:name="Salesforce Sfdc config" doc:id="38a0808d-8f32-4c87-a763-4db431b3c4cd">
-		<salesforce:basic-connection username="${sfdc.a.username}"
-			password="${sfdc.a.password}" securityToken="${sfdc.a.securityToken}" url="${sfdc.a.url}"/>
-	</salesforce:sfdc-config>
-	<salesforce:sfdc-config name="Salesforce_Sfdc_B_config"
-		doc:name="Salesforce Sfdc config" doc:id="3d4eabb0-83f2-4e02-97e1-77c5417347f7">
-		<salesforce:basic-connection username="${sfdc.b.username}"
-			password="${sfdc.b.password}" securityToken="${sfdc.b.securityToken}" url="${sfdc.b.url}"/>
-	</salesforce:sfdc-config>
 
-	<email:smtp-config name="Gmail_SMTP" doc:name="Email SMTP"
-		doc:id="8ba14ccd-a5b8-43a8-8281-cd433c852f2b">
-		<email:smtps-connection host="${smtp.host}"
-			port="${smtp.port}" user="${smtp.user}" password="${smtp.password}"
-			tlsContext="TLS_Context" />
-	</email:smtp-config>
-	<tls:context name="TLS_Context" doc:name="TLS Context"
-		doc:id="233e532c-8296-4ddd-ac67-e2b7984b3609">
-		<tls:trust-store insecure="true" />
-	</tls:context>
-	<configuration-properties file="mule.${mule.env}.properties" doc:name="Configuration properties" doc:id="46877740-aac5-4812-8728-4718689aa9ec" />
-	<configuration-properties file="common.properties" doc:name="Configuration properties" doc:id="dffa4da7-cc5c-4ecb-922e-1115b4387354" />
-	
-	<flow name="template-sfdc2sfdc-contact-migrationFlow" doc:id="884f86c5-66e1-4701-bb9b-594c2a60abf3" >
-		<http:listener config-ref="HTTP_Listener_config" path="/migrate" doc:name="/migrate" doc:id="1a64d758-b02b-4675-b66a-f7c9f4fcab6b" />
+	<flow name="businessLogicFlow" doc:id="884f86c5-66e1-4701-bb9b-594c2a60abf3" initialState="started">
 		<salesforce:query config-ref="Salesforce_Sfdc_A_config" doc:name="Query Accounts from Salesforce instance A" doc:id="ebcf71a8-3192-4437-b2cb-b23f008afae5">
 			<salesforce:salesforce-query>SELECT Description,Email,FirstName,LastName,LastModifiedDate,MailingCountry,Title, Account.Id, Account.Name, Account.AccountNumber, Account.Description, Account.Industry, Account.NumberOfEmployees FROM Contact WHERE (MailingCountry = 'US' AND Email &lt;&gt; '') ORDER BY Email ASC</salesforce:salesforce-query>
 		</salesforce:query>
@@ -180,17 +153,15 @@ payload map
  					</route>
 		</scatter-gather>
 			</batch:on-complete>
-		</batch:job>
-		<logger level="INFO" doc:name="Log - Migration process has started!" doc:id="673c18b0-db38-44f6-95ef-69edd1e75ed6" message="Migration process has started!"/>
-		<ee:transform doc:name="Build response" doc:id="2abddd58-c707-435a-a004-ec5ba9107429" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-	"message": "Migration process has started!"
-}]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+		</batch:job>		
+		<logger level="INFO" doc:name="Log - Migration process has started!" doc:id="673c18b0-db38-44f6-95ef-69edd1e75ed6" message="Migration process has started!" />
+	</flow>
+	<flow name="mainFlow" doc:id="7c0a5bef-b3d5-442f-bff3-10d038f69a5e" >
+		<flow-ref doc:name="businessLogicFlow" doc:id="91360ede-4d71-44c7-9b64-8ee762e04ea0" name="businessLogicFlow"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="488b507d-e26c-4c56-8759-8bb4f6645d71" type="ANY">
+				<flow-ref doc:name="errorHandlingFlow" doc:id="afdaf73c-0137-4d60-84f6-5c41234771a3" name="errorHandlingFlow"/>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 </mule>

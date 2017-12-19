@@ -17,6 +17,8 @@
 		<mule.maven.plugin.version>3.0.0</mule.maven.plugin.version>
 		<mule.connectors.version>1.0.0</mule.connectors.version>
 		<mule.sfdc.connector.version>9.0.0</mule.sfdc.connector.version>
+		
+		<readme.generator.plugin.version>1.0.10-SNAPSHOT</readme.generator.plugin.version>
 	</properties>
 
 	<build>
@@ -27,6 +29,21 @@
 				<version>${mule.maven.plugin.version}</version>
 				<extensions>true</extensions>
 				<configuration>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.mule.templates</groupId>
+				<artifactId>templates-tooling-readme-generator-maven-plugin</artifactId>
+				<version>${readme.generator.plugin.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>readme</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<skipGeneration>true</skipGeneration>
 				</configuration>
 			</plugin>
 		</plugins>
