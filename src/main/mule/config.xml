@@ -25,8 +25,7 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 			<salesforce:basic-connection 
 				username="${sfdc.a.username}"
 				password="${sfdc.a.password}" 
-				securityToken="${sfdc.a.securityToken}" 
-				url="${sfdc.a.url}"/>
+				securityToken="${sfdc.a.securityToken}" />
 		</salesforce:sfdc-config>
 		
 		<salesforce:sfdc-config name="Salesforce_Sfdc_B_config"
@@ -34,8 +33,7 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 			<salesforce:basic-connection 
 				username="${sfdc.b.username}"
 				password="${sfdc.b.password}" 
-				securityToken="${sfdc.b.securityToken}" 
-				url="${sfdc.b.url}"/>
+				securityToken="${sfdc.b.securityToken}" />
 		</salesforce:sfdc-config>
 	
 		<email:smtp-config name="Gmail_SMTP" doc:name="Email SMTP"
