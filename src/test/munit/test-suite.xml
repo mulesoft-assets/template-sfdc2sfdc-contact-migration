@@ -11,17 +11,35 @@ http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mul
 http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<munit:config name="test-suite.xml" doc:name="MUnit configuration"/>
-	<configuration-properties doc:name="Configuration properties" doc:id="c382dc50-b83c-41be-ad31-42ccb929d758" file="mule.${mule.env}.properties" />
+	<configuration-properties doc:name="Configuration properties" doc:id="c382dc50-b83c-41be-ad31-42ccb929d758" file="mule.test.properties" />
 	<configuration-properties doc:name="Configuration properties" doc:id="59fef852-f885-4b1e-baac-96bce830be9f" file="mule-artifact.properties" />
 	<configuration-properties doc:name="Configuration properties" doc:id="a0f29785-69a4-48b7-8ef5-410c95ee7ff2" file="common.properties" />
 	<munit:before-test name="test-suiteBefore_Test" description="Before tests actions" doc:id="7f8facb1-95ae-4456-9448-faf3a3a89dc9" >
+		<ee:transform doc:name="Prepare common testing data" doc:id="2ac23e37-8be7-4e8d-bff1-fa5460a43558" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="testEmail1" ><![CDATA[%dw 2.0
+output application/java
+---
+"test" ++ (uuid() splitBy("-"))[0] ++ "@testemail.sk"]]></ee:set-variable>
+				<ee:set-variable variableName="testEmail2" ><![CDATA[%dw 2.0
+output application/java
+---
+"test" ++ (uuid() splitBy("-"))[0] ++ "@testemail.sk"]]></ee:set-variable>
+				<ee:set-variable variableName="testEmail3" ><![CDATA[%dw 2.0
+output application/java
+---
+"test" ++ (uuid() splitBy("-"))[0] ++ "@testemail.sk"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
 		<ee:transform doc:name="Prepare testing data in instance A" doc:id="7c253cc1-4a09-4e71-a9c5-74e5dbbf5848">
 				<ee:message>
 					<ee:set-payload><![CDATA[%dw 2.0
 output application/java
 ---
 [{
-	Email: "testName1@testemail.sk",
+	Email: vars.testEmail1,
 	Description: "test description1",
 	FirstName: "Integration1",
 	LastName: "TestName1",
@@ -29,7 +47,7 @@ output application/java
 	Title: "TestTitle1"
 },
 {
-	Email: "testName2@testemail.sk",
+	Email: vars.testEmail2,
 	Description: "test description2",
 	FirstName: "Integration2",
 	LastName: "TestName2",
@@ -37,7 +55,7 @@ output application/java
 	Title: "TestTitle2"
 },
 {
-	Email: "testName3@testemail.sk",
+	Email: vars.testEmail3,
 	Description: "test description3",
 	FirstName: "UpIntegration3",
 	LastName: "UpTestName3",
@@ -57,7 +75,7 @@ output application/java
 ---
 [
 {
-	Email: "testName3@testemail.sk",
+	Email: vars.testEmail3,
 	Description: "test description3",
 	FirstName: "Integration3",
 	LastName: "TestName3",
@@ -85,7 +103,7 @@ output application/java
 				<salesforce:parameters ><![CDATA[#[output applicaton/java
 ---
 {
-	"email2" : "testName2@testemail.sk"
+	"email2" : vars.testEmail2
 }]]]></salesforce:parameters>
 			</salesforce:query>
 			<set-variable value="#[sizeOf(payload)]" doc:name=" Set Variable for assertion" doc:id="95c89be7-1756-40fd-b198-2b1334bf6979" variableName="resultSize"/>
@@ -95,7 +113,7 @@ output application/java
 				<salesforce:parameters ><![CDATA[#[output applicaton/java
 ---
 {
-	"email1" : "testName1@testemail.sk"
+	"email1" : vars.testEmail1
 }]]]></salesforce:parameters>
 			</salesforce:query>
 			<set-variable value="#[sizeOf(payload)]" doc:name="Set Variable with result size" doc:id="b485fb70-e4a8-4f97-9da9-e0ace1a236c9" variableName="resultSize" />
@@ -104,11 +122,11 @@ output application/java
 				<salesforce:delete-ids><![CDATA[#[payload map ($.Id)]]]></salesforce:delete-ids>
 			</salesforce:delete>
 			<salesforce:query doc:name="Query for Contact, which should be updated in instance B" doc:id="9e6b41b3-28a9-4886-9fe8-ce16408c790b" config-ref="Salesforce_Sfdc_B_config">
-				<salesforce:salesforce-query >SELECT Id FROM Contact WHERE Email = ':email1' AND FirstName = 'UpIntegration3' AND LastName = 'UpTestName3' AND Title = 'TestTitle3'</salesforce:salesforce-query>
+				<salesforce:salesforce-query >SELECT Id FROM Contact WHERE Email = ':email3' AND FirstName = 'UpIntegration3' AND LastName = 'UpTestName3' AND Title = 'TestTitle3'</salesforce:salesforce-query>
 				<salesforce:parameters ><![CDATA[#[output applicaton/java
 ---
 {
-	"email1" : "testName3@testemail.sk"
+	"email3" : vars.testEmail3
 }]]]></salesforce:parameters>
 			</salesforce:query>
 			<set-variable value="#[sizeOf(payload)]" doc:name="Set Variable with result size" doc:id="a7d6e9a8-81c0-4712-920f-d8a72978e0e6" variableName="resultSize"/>
