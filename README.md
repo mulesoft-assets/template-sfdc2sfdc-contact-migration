@@ -17,7 +17,7 @@ This template is subject to the conditions of the [MuleSoft License Agreement](h
 
 Review the terms of the license before downloading and using this template. You can use this template for free with the Mule Enterprise Edition, CloudHub, or as a trial in Anypoint Studio.
 
-# Use Case
+## Use Case
 
 As a Salesforce admin I want to synchronize contacts between two Salesforce orgs.
 
@@ -197,7 +197,7 @@ In the Studio visual editor, the properties are on the _Global Element_ tab.
 
 ## businessLogic.xml
 
-Functional aspect of the Anypoint Template is implemented on this XML, directed by one flow responsible of excecuting the logic.
+Functional aspects of the template are implemented in this XML, directed by the flow responsible for executing the logic.
 
 For the purpose of this particular Anypoint Template the _mainFlow_ just executes the Batch Job which handles all the logic of it.
 
@@ -205,9 +205,9 @@ This flow has Error Handling that basically consists on invoking the _On Error P
 
 ## endpoints.xml
 
-This is the file where you will found the inbound and outbound sides of your integration app.
+This is the file where you find the inbound and outbound sides of your integration app.
 
-This Anypoint Template has only an [HTTP Inbound Endpoint](http://www.mulesoft.org/documentation/display/current/HTTP+Endpoint+Reference) as the way to trigger the use case.
+This template has only an HTTP Listener as the way to trigger the use case.
 
 **HTTP Inbound Endpoint** - Start Synchronization
 
@@ -215,13 +215,12 @@ This Anypoint Template has only an [HTTP Inbound Endpoint](http://www.mulesoft.o
 
 + The path configured by default is `synccontacts` and you are free to change for the one you prefer.
 
-+ The host name for all endpoints in your CloudHub configuration should be defined as `localhost`. CloudHub will then route requests from your application domain URL to the endpoint.
++ The host name for all endpoints in your CloudHub configuration should be defined as `localhost`. CloudHub routes requests from your application domain URL to the endpoint.
 
-+ The endpoint is configured as a _request-response_ since as a result of calling it the response will be the total of Contacts migrated and filtered by the criteria specified.
++ The endpoint is configured as a _request-response_ since as a result of calling it the response is the total of contacts migrated and filtered by the criteria specified.
 
 ## errorHandling.xml
 
 This file handles how your integration reacts depending on the different exceptions.
 
 This file provides error handling that is referenced by the main flow in the business logic.
-
