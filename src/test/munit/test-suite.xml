@@ -127,7 +127,7 @@ payload filter ($.Email == vars.testEmail1
             <set-variable value="#[sizeOf(payload)]" doc:name=" Set Variable for assertion" doc:id="95c89be7-1756-40fd-b198-2b1334bf6979"
                 variableName="resultSize" />
             <munit-tools:assert-that doc:name="Assert that we didn't find Contact" doc:id="1e559409-a86b-47b9-bb44-cbcac54c4ade"
-                expression="#[vars.resultSize]" is="#[MunitTools::equalTo(0)]" />
+                expression="#[vars.resultSize]" is="#[MunitTools::equalTo(0)]" message="Assert that we didn't find Contact has failed"/>
             <salesforce:query doc:name="Query for Contact, which should be migrated to instance B" doc:id="145cdbc1-3137-4eef-b8e3-7aea91cb9833"
                 config-ref="Salesforce_Sfdc_B_config">
                 <salesforce:salesforce-query>SELECT Id FROM Contact WHERE Email = ':email1' AND FirstName = 'Integration1' AND LastName = 'TestName1' AND Title
@@ -141,7 +141,7 @@ payload filter ($.Email == vars.testEmail1
             <set-variable value="#[sizeOf(payload)]" doc:name="Set Variable with result size" doc:id="b485fb70-e4a8-4f97-9da9-e0ace1a236c9"
                 variableName="resultSize" />
             <munit-tools:assert-that doc:name="Assert that we found migrated Contact" doc:id="a8f4453a-10c6-4508-8ecf-64cc08e6129c"
-                expression="#[vars.resultSize]" is="#[MunitTools::equalTo(1)]" />
+                expression="#[vars.resultSize]" is="#[MunitTools::equalTo(1)]" message="Assert that we found migrated Contact has failed"/>
             <salesforce:delete doc:name="Delete migrated Contacts from B" doc:id="353f9ea2-b733-4370-9d93-a97ee651f5e4" config-ref="Salesforce_Sfdc_B_config">
                 <salesforce:ids><![CDATA[#[payload map ($.Id)]]]></salesforce:ids>
             </salesforce:delete>
@@ -158,7 +158,7 @@ payload filter ($.Email == vars.testEmail1
             <set-variable value="#[sizeOf(payload)]" doc:name="Set Variable with result size" doc:id="a7d6e9a8-81c0-4712-920f-d8a72978e0e6"
                 variableName="resultSize" />
             <munit-tools:assert-that doc:name="Assert that we found updated Contact" doc:id="e672228f-5afa-40aa-acbc-d6dd8afe1e55"
-                expression="#[vars.resultSize]" is="#[MunitTools::equalTo(1)]" />
+                expression="#[vars.resultSize]" is="#[MunitTools::equalTo(1)]" message="Assert that we found updated Contact has failed"/>
         </munit:execution>
         <munit:validation>
             <munit-tools:verify-call doc:name="Verify call" doc:id="1a6b5f3a-596f-4503-ad90-e59425ab07c4" processor="salesforce:create-job">
