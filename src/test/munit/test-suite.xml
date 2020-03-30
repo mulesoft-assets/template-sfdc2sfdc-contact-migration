@@ -67,7 +67,7 @@ output application/java
             </ee:message>
         </ee:transform>
         <salesforce:create type="Contact" doc:name="Create Contacts in instance A" doc:id="d62c8e61-71a7-43f3-8aa0-b4b5cb5359a4" config-ref="Salesforce_Sfdc_A_config" />
-        <set-variable value="#[payload map ($.id)]" doc:name="Store IDs to variable sfdcAIds" doc:id="623a0d4f-c873-45e6-a7ee-89bc1e194721"
+        <set-variable value="#[payload.items map ($.id)]" doc:name="Store IDs to variable sfdcAIds" doc:id="623a0d4f-c873-45e6-a7ee-89bc1e194721"
             variableName="sfdcAIds" />
         <ee:transform doc:name="Prepare testing data in instance B" doc:id="69ffb93b-8e2c-4c34-9eb2-9f932ce99aab">
             <ee:message>
@@ -89,7 +89,7 @@ output application/java
         </ee:transform>
         <salesforce:create doc:name="Create Contact in instance B" doc:id="eec5baea-785d-4433-ad52-ae00bdc6b384" config-ref="Salesforce_Sfdc_B_config"
             type="Contact" />
-        <set-variable value="#[payload map ($.id)]" doc:name="Store IDs to variable sfdcBIds" doc:id="9e874dae-1b06-439d-b615-148c7aef7a69"
+        <set-variable value="#[payload.items map ($.id)]" doc:name="Store IDs to variable sfdcBIds" doc:id="9e874dae-1b06-439d-b615-148c7aef7a69"
             variableName="sfdcBIds" />
         <munit-tools:mock-when doc:name="Mock email processor to avoid sending email" doc:id="17ab3357-3f08-4456-9f14-c41c281e06f1"
             processor="email:send">
@@ -143,7 +143,7 @@ payload filter ($.Email == vars.testEmail1
             <munit-tools:assert-that doc:name="Assert that we found migrated Contact" doc:id="a8f4453a-10c6-4508-8ecf-64cc08e6129c"
                 expression="#[vars.resultSize]" is="#[MunitTools::equalTo(1)]" />
             <salesforce:delete doc:name="Delete migrated Contacts from B" doc:id="353f9ea2-b733-4370-9d93-a97ee651f5e4" config-ref="Salesforce_Sfdc_B_config">
-                <salesforce:delete-ids><![CDATA[#[payload map ($.Id)]]]></salesforce:delete-ids>
+                <salesforce:ids><![CDATA[#[payload map ($.Id)]]]></salesforce:ids>
             </salesforce:delete>
             <salesforce:query doc:name="Query for Contact, which should be updated in instance B" doc:id="9e6b41b3-28a9-4886-9fe8-ce16408c790b"
                 config-ref="Salesforce_Sfdc_B_config">
@@ -160,13 +160,20 @@ payload filter ($.Email == vars.testEmail1
             <munit-tools:assert-that doc:name="Assert that we found updated Contact" doc:id="e672228f-5afa-40aa-acbc-d6dd8afe1e55"
                 expression="#[vars.resultSize]" is="#[MunitTools::equalTo(1)]" />
         </munit:execution>
+        <munit:validation>
+            <munit-tools:verify-call doc:name="Verify call" doc:id="1a6b5f3a-596f-4503-ad90-e59425ab07c4" processor="salesforce:create-job">
+                <munit-tools:with-attributes >
+                    <munit-tools:with-attribute whereValue="Upsert job - Contacts in Salesforce B" attributeName="doc:name" />
+                </munit-tools:with-attributes>
+            </munit-tools:verify-call>
+        </munit:validation>
     </munit:test>
     <munit:after-test name="test-suiteAfter_Test" description="After tests actions" doc:id="5b85bb9e-67e6-47f7-8f71-53a39f147fc8">
         <salesforce:delete doc:name="Delete source Contacts in instance A" doc:id="788956ca-8ada-49c2-a3f7-7eb367e735b4" config-ref="Salesforce_Sfdc_A_config">
-            <salesforce:delete-ids><![CDATA[#[vars.sfdcAIds]]]></salesforce:delete-ids>
+            <salesforce:ids><![CDATA[#[vars.sfdcAIds]]]></salesforce:ids>
         </salesforce:delete>
         <salesforce:delete doc:name="Delete source Contact in instance B" doc:id="284bea48-594f-4fac-b08a-cdcaf0b2b3e8" config-ref="Salesforce_Sfdc_B_config">
-            <salesforce:delete-ids><![CDATA[#[vars.sfdcBIds]]]></salesforce:delete-ids>
+            <salesforce:ids><![CDATA[#[vars.sfdcBIds]]]></salesforce:ids>
         </salesforce:delete>
     </munit:after-test>
 
